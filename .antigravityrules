@@ -1,0 +1,10 @@
+# AgriN Project Rules
+
+- **Security & Architecture:**
+  - The Gemini API key MUST be kept server-side only (within Firebase Functions).
+  - NO frontend AI API calls are allowed. All AI features must be routed through the backend.
+  - Authentication must be validated before allowing any Gemini API calls.
+
+- **Stack:**
+  - Frontend: React + Vite + TypeScript.
+  - Backend: Firebase (Functions, Firestore, Storage).

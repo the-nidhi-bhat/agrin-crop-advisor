@@ -1,0 +1,1 @@
+{"version":3,"file":"advisory.js","sourceRoot":"","sources":["../../src/advisory.ts"],"names":[],"mappings":";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;AAAA,MAAY,SAAS,+CAA2B;AAEnC,QAAA,QAAQ,GAAG,SAAS,CAAC,KAAK,CAAC,MAAM,CAAC,KAAK,EAAE,IAAI,EAAE,OAAO,EAAE,EAAE;IACnE,+DAA+D;IAC/D,OAAO,EAAE,MAAM,EAAE,SAAS,EAAE,OAAO,EAAE,+BAA+B,EAAE,CAAC;AAC3E,CAAC,CAAC,CAAC"}
