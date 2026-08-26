@@ -4,7 +4,7 @@ import { getFunctions, httpsCallable, connectFunctionsEmulator } from "firebase/
 import { getStorage, ref, uploadBytes, connectStorageEmulator } from "firebase/storage";
 import crypto from "crypto";
 
-const app = initializeApp({ projectId: "demo-agrin", apiKey: "fake-api-key", storageBucket: "demo-agrin.appspot.com" });
+const app = initializeApp({ projectId: "agrin-crop-advisor", apiKey: "fake-api-key", storageBucket: "agrin-crop-advisor.firebasestorage.app" });
 const auth = getAuth(app);
 connectAuthEmulator(auth, "http://127.0.0.1:9099");
 const functions = getFunctions(app, "us-central1");
@@ -91,6 +91,24 @@ async function run() {
       console.log(`SUCCESS! Advisory IDOR Rejection: [${err.code}] ${err.message}`);
     } else {
       console.log(`FAIL: Expected not-found for IDOR on advisory, got [${err.code}] ${err.message}`);
+    }
+  }
+
+  console.log("\n--- TEST: FUNCTION - DELIVER IDOR VALIDATION ---");
+  const deliverFn = httpsCallable(functions, "deliver");
+  
+  // Try to access a fake hacker diagnosis
+  try {
+    await deliverFn({
+      diagnosisId: "some-other-farmers-diagnosis-id"
+    });
+    console.log("FAIL: IDOR succeeded on deliver!");
+    process.exit(1);
+  } catch (err) {
+    if (err.code === "not-found") {
+      console.log(`SUCCESS! Deliver IDOR Rejection: [${err.code}] ${err.message}`);
+    } else {
+      console.log(`FAIL: Expected not-found for IDOR on deliver, got [${err.code}] ${err.message}`);
     }
   }
 

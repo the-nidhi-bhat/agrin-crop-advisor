@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { Camera, Upload, MapPin, Leaf, Phone } from "lucide-react";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { ref, uploadBytes } from "firebase/storage";
 import { httpsCallable } from "firebase/functions";
 import { storage, functions } from "../lib/firebase";
 import { useAuth } from "../hooks/useAuth";
@@ -70,15 +70,21 @@ export const Home = () => {
 
       setLoadingStep(3); // Generating audio / Done...
       
-      // Simulate slight delay for UX
-      setTimeout(() => {
-        setResult({
-          ...diagnosisData,
-          advisory: advisoryData.advisory, // Override with the detailed advisory
-          weather: advisoryData.weather
-        });
-        setLoadingStep(null);
-      }, 1000);
+      // 4. Call backend function (Deliver)
+      const deliverFn = httpsCallable(functions, "deliver");
+      const deliverResponse = await deliverFn({
+        diagnosisId: diagnosisData.id
+      });
+      const deliverData: any = deliverResponse.data;
+
+      setResult({
+        ...diagnosisData,
+        advisory: advisoryData.advisory,
+        weather: advisoryData.weather,
+        translatedAdvisory: deliverData.translatedAdvisory,
+        smsStatus: deliverData.smsStatus
+      });
+      setLoadingStep(null);
 
     } catch (err: any) {
       console.error(err);
@@ -110,9 +116,30 @@ export const Home = () => {
           <p className="text-gray-600">{result.advisory}</p>
         </div>
 
+        {/* Translation and Audio Section */}
+        <div className="bg-blue-50 rounded-lg shadow-sm border border-blue-200 p-4 space-y-3">
+          <h4 className="font-bold text-blue-900">Translation (Kannada)</h4>
+          <p className="text-blue-800">{result.translatedAdvisory}</p>
+          
+          <div className="pt-2">
+             <button 
+               onClick={() => {
+                 window.speechSynthesis.cancel(); // Stop any currently playing audio
+                 const utterance = new SpeechSynthesisUtterance(result.translatedAdvisory);
+                 utterance.lang = 'kn-IN';
+                 window.speechSynthesis.speak(utterance);
+               }}
+               className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg flex items-center justify-center space-x-2 transition-colors"
+             >
+               <span className="text-xl">🔊</span>
+               <span>Play Audio (Kannada)</span>
+             </button>
+          </div>
+        </div>
+
         <div className="flex items-center space-x-2 text-green-700 bg-green-50 p-3 rounded-lg">
           <div className="w-8 h-8 rounded-full bg-green-200 flex items-center justify-center">✓</div>
-          <span className="font-medium">SMS Sent to {phone}</span>
+          <span className="font-medium">SMS Sent to {result.smsStatus?.to || phone}</span>
         </div>
 
         <button 

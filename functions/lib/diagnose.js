@@ -109,7 +109,7 @@ exports.diagnose = functions.https.onCall(async (data, context) => {
             throw new functions.https.HttpsError("internal", "Server configuration error.");
         }
         const genAI = new generative_ai_1.GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-3.6-flash" });
         const prompt = `You are an expert agronomist. 
 Analyze this image of a ${crop} leaf from a farmer located in ${location || "an unknown location"}.
 Respond strictly in JSON format with no markdown wrappers or extra text.

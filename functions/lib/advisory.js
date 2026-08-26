@@ -86,7 +86,7 @@ exports.advisory = functions.https.onCall(async (data, context) => {
             throw new functions.https.HttpsError("internal", "Server configuration error.");
         }
         const genAI = new generative_ai_1.GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-3.6-flash" });
         const prompt = `You are an expert, practical agronomist. 
 The farmer is growing ${cropType || "crops"} in ${location || "an unknown location"}.
 We have identified the following issue: ${diseaseIdentified || "Unknown disease"}.
