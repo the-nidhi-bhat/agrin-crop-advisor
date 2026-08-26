@@ -16,6 +16,8 @@ export const Home = () => {
   const [loadingStep, setLoadingStep] = useState<number | null>(null);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [usingFallbackVoice, setUsingFallbackVoice] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -93,6 +95,28 @@ export const Home = () => {
     }
   };
 
+  const playAudio = (text: string) => {
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    
+    const voices = window.speechSynthesis.getVoices();
+    const targetVoice = voices.find(v => v.lang.startsWith('kn'));
+    
+    if (targetVoice) {
+      utterance.voice = targetVoice;
+      setUsingFallbackVoice(false);
+    } else {
+      utterance.lang = 'kn-IN';
+      setUsingFallbackVoice(true);
+    }
+
+    utterance.onstart = () => setIsPlaying(true);
+    utterance.onend = () => setIsPlaying(false);
+    utterance.onerror = () => setIsPlaying(false);
+    
+    window.speechSynthesis.speak(utterance);
+  };
+
   if (loadingStep !== null) {
     return <StagedLoader currentStep={loadingStep} />;
   }
@@ -123,16 +147,16 @@ export const Home = () => {
           
           <div className="pt-2">
              <button 
-               onClick={() => {
-                 window.speechSynthesis.cancel(); // Stop any currently playing audio
-                 const utterance = new SpeechSynthesisUtterance(result.translatedAdvisory);
-                 utterance.lang = 'kn-IN';
-                 window.speechSynthesis.speak(utterance);
-               }}
-               className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg flex items-center justify-center space-x-2 transition-colors"
+               onClick={() => playAudio(result.translatedAdvisory)}
+               className={`w-full py-3 font-bold rounded-lg flex flex-col items-center justify-center transition-colors ${isPlaying ? 'bg-blue-800 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
              >
-               <span className="text-xl">🔊</span>
-               <span>Play Audio (Kannada)</span>
+               <div className="flex items-center space-x-2">
+                 <span className="text-xl">{isPlaying ? '🔊' : '🔈'}</span>
+                 <span>{isPlaying ? 'Playing Audio...' : 'Play Audio (Kannada)'}</span>
+               </div>
+               {usingFallbackVoice && (
+                 <span className="text-xs text-blue-200 mt-1 font-normal">Playing in available voice (Kannada voice not found on device)</span>
+               )}
              </button>
           </div>
         </div>

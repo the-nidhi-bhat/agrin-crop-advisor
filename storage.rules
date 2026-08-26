@@ -10,9 +10,5 @@ service firebase.storage {
                    && request.resource.contentType.matches('image/.*');
     }
 
-    // Secure audio files (TTS outputs) strictly to the user who requested them
-    match /audio/{uid}/{audioId} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
-    }
   }
 }
