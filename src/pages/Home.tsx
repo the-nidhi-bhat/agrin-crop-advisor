@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { Camera, Upload, MapPin, Leaf, Phone } from "lucide-react";
+import { Camera, MapPin, Leaf, Phone } from "lucide-react";
 import { ref, uploadBytes } from "firebase/storage";
 import { httpsCallable } from "firebase/functions";
 import { storage, functions } from "../lib/firebase";

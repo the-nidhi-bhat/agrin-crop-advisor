@@ -1,4 +1,3 @@
-import React from 'react';
 import { AuthProvider } from './hooks/useAuth';
 import { Home } from './pages/Home';
 
