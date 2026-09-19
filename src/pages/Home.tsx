@@ -1,8 +1,6 @@
 import React, { useState, useRef } from "react";
 import { Camera, MapPin, Leaf, Phone } from "lucide-react";
-import { ref, uploadBytes } from "firebase/storage";
-import { httpsCallable } from "firebase/functions";
-import { storage, functions } from "../lib/firebase";
+import { supabase } from "../lib/supabase";
 import { useAuth } from "../hooks/useAuth";
 import { StagedLoader } from "../components/StagedLoader";
 
@@ -43,48 +41,62 @@ export const Home = () => {
       // 1. Upload Photo
       const fileId = crypto.randomUUID();
       const ext = file.name.split('.').pop() || 'jpg';
-      const storagePath = `uploads/${user.uid}/${fileId}.${ext}`;
-      const storageRef = ref(storage, storagePath);
-      
-      await uploadBytes(storageRef, file);
-      // Wait, passing the full path so the backend can verify IDOR
-      
+      const storagePath = `uploads/${user.id}/${fileId}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("uploads")
+        .upload(storagePath, file, { contentType: file.type || "image/jpeg" });
+      if (uploadError) throw uploadError;
+      // Passing the full path so the backend can verify IDOR
+
       setLoadingStep(1); // Analyzing...
 
       // 2. Call backend function (Diagnosis)
-      const diagnoseFn = httpsCallable(functions, "diagnose");
-      const diagnosisResponse = await diagnoseFn({
-        imageUrl: storagePath,
-        crop,
-        location,
-        phoneNumber: phone
-      });
-      const diagnosisData: any = diagnosisResponse.data;
+      const { data: diagnosisData, error: diagnoseError } = await supabase.functions.invoke(
+        "diagnose",
+        {
+          body: {
+            imageUrl: storagePath,
+            crop,
+            location,
+            phoneNumber: phone
+          }
+        }
+      );
+      if (diagnoseError) throw diagnoseError as Error;
 
       setLoadingStep(2); // Fetching local advice...
 
       // 3. Call backend function (Advisory)
-      const advisoryFn = httpsCallable(functions, "advisory");
-      const advisoryResponse = await advisoryFn({
-        diagnosisId: diagnosisData.id
-      });
-      const advisoryData: any = advisoryResponse.data;
+      const { data: advisoryData, error: advisoryError } = await supabase.functions.invoke(
+        "advisory",
+        {
+          body: {
+            diagnosisId: (diagnosisData as any).id
+          }
+        }
+      );
+      if (advisoryError) throw advisoryError as Error;
 
       setLoadingStep(3); // Generating audio / Done...
-      
+
       // 4. Call backend function (Deliver)
-      const deliverFn = httpsCallable(functions, "deliver");
-      const deliverResponse = await deliverFn({
-        diagnosisId: diagnosisData.id
-      });
-      const deliverData: any = deliverResponse.data;
+      const { data: deliverData, error: deliverError } = await supabase.functions.invoke(
+        "deliver",
+        {
+          body: {
+            diagnosisId: (diagnosisData as any).id
+          }
+        }
+      );
+      if (deliverError) throw deliverError as Error;
 
       setResult({
-        ...diagnosisData,
-        advisory: advisoryData.advisory,
-        weather: advisoryData.weather,
-        translatedAdvisory: deliverData.translatedAdvisory,
-        smsStatus: deliverData.smsStatus
+        ...(diagnosisData as any),
+        advisory: (advisoryData as any).advisory,
+        weather: (advisoryData as any).weather,
+        translatedAdvisory: (deliverData as any).translatedAdvisory,
+        smsStatus: (deliverData as any).smsStatus
       });
       setLoadingStep(null);
 

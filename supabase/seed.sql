@@ -1,0 +1,1 @@
+-- AgriN local seed DB. No seed data yet (schema is source of truth).
