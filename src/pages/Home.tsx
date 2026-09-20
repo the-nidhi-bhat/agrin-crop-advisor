@@ -41,7 +41,7 @@ export const Home = () => {
       // 1. Upload Photo
       const fileId = crypto.randomUUID();
       const ext = file.name.split('.').pop() || 'jpg';
-      const storagePath = `uploads/${user.id}/${fileId}.${ext}`;
+      const storagePath = `${user.id}/${fileId}.${ext}`;
 
       const { error: uploadError } = await supabase.storage
         .from("uploads")
@@ -137,9 +137,14 @@ export const Home = () => {
     return (
       <div className="p-6 max-w-md mx-auto space-y-6">
         <h2 className="text-3xl font-bold text-gray-800">Diagnosis Ready</h2>
+        <p className="text-xs text-gray-500">
+          AI-assisted advisory only — not a professional diagnosis. Always consult a local agricultural officer before applying treatments.
+        </p>
         <div className="p-4 bg-green-50 rounded-lg border border-green-200 shadow-sm">
           <h3 className="text-xl font-bold text-green-900">{result.disease}</h3>
-          <p className="text-sm text-green-700 mt-1">Confidence: {result.confidence}</p>
+          {result.confidence && (
+            <p className="text-sm text-green-700 mt-1">Confidence: {result.confidence}</p>
+          )}
         </div>
         
         <div className="bg-white rounded-lg shadow-sm border p-4 space-y-3">
@@ -173,9 +178,13 @@ export const Home = () => {
           </div>
         </div>
 
-        <div className="flex items-center space-x-2 text-green-700 bg-green-50 p-3 rounded-lg">
-          <div className="w-8 h-8 rounded-full bg-green-200 flex items-center justify-center">✓</div>
-          <span className="font-medium">SMS Sent to {result.smsStatus?.to || phone}</span>
+        <div className="flex items-center space-x-2 text-amber-800 bg-amber-50 border border-amber-200 p-3 rounded-lg">
+          <div className="w-8 h-8 rounded-full bg-amber-200 flex items-center justify-center">i</div>
+          <span className="font-medium">
+            {result.smsStatus?.simulated
+              ? `SMS is simulated (no SMS provider connected). Would be sent to ${result.smsStatus?.to || phone}.`
+              : `SMS sent to ${result.smsStatus?.to || phone}.`}
+          </span>
         </div>
 
         <button 

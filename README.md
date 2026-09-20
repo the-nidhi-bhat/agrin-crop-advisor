@@ -3,7 +3,7 @@
 A local-first, serverless plant disease diagnosis app for farmers. A farmer uploads a photo of a crop leaf, and an AI pipeline identifies the disease, explains the symptoms, gives a plain-language treatment advisory, translates it to Kannada, and prepares an SMS delivery.
 
 **AI backend:** [`Gemini 3.6 Flash`](https://ai.google.dev/) (via the Google Generative AI SDK).
-**Platform:** [Supabase](https://supabase.com) local stack (PostgreSQL + Edge Functions + Auth + Storage). The original Firebase implementation is being migrated to Supabase.
+**Platform:** [Supabase](https://supabase.com) local stack (PostgreSQL + Edge Functions + Auth + Storage). Migrated from a Firebase implementation; the legacy Firebase code has been fully removed.
 
 ---
 
@@ -15,6 +15,7 @@ A local-first, serverless plant disease diagnosis app for farmers. A farmer uplo
 
 Supporting behavior:
 
+- **Supported crops** — Tomato, Chili, Paddy (static select in the UI; the backend additionally sanitizes whatever `crop` value arrives).
 - **Anonymous-first auth** — no sign-up screen. Supabase anonymous sign-in is tried first; on local stacks where it is disabled, a throwaway email/password account is auto-provisioned and persisted in `localStorage`.
 - **Private storage** — leaf images live in a private `uploads` bucket at `{uid}/{uuid}.{ext}`, owner-scoped by row-level security.
 - **Rate limiting** — server-side, transactional: `diagnose` 5/hour, `advisory` and `deliver` 10/hour (per user, rolling 1-hour window).
@@ -24,9 +25,9 @@ Supporting behavior:
 ## Current status
 
 - ✅ Backend migrated to Supabase and verified end-to-end against the local stack (real leaf image).
-- ✅ Frontend infrastructure migrated (auth, storage, function invocation) — no login screen, no Firebase in the hot paths.
-- ⚠️ **Known issue:** the frontend uploads to `uploads/{uid}/…` but the Supabase storage policy expects `{uid}/…` (no `uploads/` prefix). The browser happy path is blocked on this; the fix is not yet applied.
-- 🗑️ Firebase files (`functions/`, `firebase.json`, `firestore.*`, `storage.rules`, `src/lib/firebase.ts`) are still present and will be removed once the migration is complete.
+- ✅ Frontend infrastructure migrated (auth, storage, function invocation) — no login screen.
+- ✅ Storage paths match the RLS/Edge architecture; the full browser happy path (upload → diagnose → advisory → deliver → result) passes against the local stack.
+- ✅ Legacy Firebase frontend/backend files and dependencies removed.
 
 ---
 
@@ -99,7 +100,7 @@ npm run lint                   # oxlint
 ```
 React/Vite frontend
    ├─ supabase.auth            → anonymous / auto-provisioned session (JWT)
-   ├─ supabase.storage         → uploads/{uid}/{uuid}.{ext}  (private bucket, RLS)
+   ├─ supabase.storage         → uploads bucket, {uid}/{uuid}.{ext}  (private, RLS)
    └─ supabase.functions       → invoke 'diagnose' | 'advisory' | 'deliver'
         └─ Edge Functions (Deno)
              ├─ verify JWT + ownership (IDOR guards)

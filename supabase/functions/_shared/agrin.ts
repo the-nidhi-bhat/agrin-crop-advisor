@@ -7,6 +7,7 @@ import fileType from "file-type";
 
 export const GEMINI_MODEL = "gemini-3.6-flash";
 export const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5242880
+const GEMINI_TIMEOUT_MS = 25_000; // bound each attempt so a hung call returns an honest 503 instead of a platform 504
 
 export class ApiError extends Error {
   constructor(
@@ -193,7 +194,10 @@ export async function callGemini(
   }
 
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
+  const model = genAI.getGenerativeModel(
+    { model: GEMINI_MODEL },
+    { timeout: GEMINI_TIMEOUT_MS },
+  );
 
   const parts = image
     ? [prompt, { inlineData: { data: image.base64, mimeType: image.mime } }]
@@ -211,6 +215,11 @@ export async function callGemini(
       }
       return text;
     } catch (err) {
+      // A timeout is not transient — retrying only stacks timeouts and burns
+      // the whole invocation. Surface it honestly as unavailable (503).
+      if (isTimeout(err)) {
+        throw httpError("unavailable", "The AI service timed out. Please try again in a moment.");
+      }
       lastError = err;
       if (attempt < maxAttempts && isTransient(err)) {
         await new Promise((r) => setTimeout(r, attempt * 700));
@@ -224,6 +233,16 @@ export async function callGemini(
     throw httpError("unavailable", "AI service is busy. Please try again in a moment.");
   }
   throw httpError("internal", "An error occurred while contacting the AI model.");
+}
+
+function isTimeout(err: unknown): boolean {
+  const name = err instanceof Error ? err.name : "";
+  const msg = err instanceof Error ? err.message : String(err);
+  return (
+    name === "AbortError" ||
+    name === "GoogleGenerativeAIAbortError" ||
+    /timeout|timed ?out|abort|cancell?ed/i.test(msg)
+  );
 }
 
 function isTransient(err: unknown): boolean {

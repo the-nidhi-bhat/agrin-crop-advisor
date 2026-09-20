@@ -38,11 +38,14 @@ Deno.serve(async (req) => {
       );
     }
 
-    const crop = typeof body.crop === "string"
-      ? body.crop
-      : typeof body.cropType === "string"
-      ? body.cropType
-      : "";
+    // Sanitize crop to prevent prompt injection (mirrors location handling).
+    const crop = (
+      typeof body.crop === "string"
+        ? body.crop
+        : typeof body.cropType === "string"
+        ? body.cropType
+        : ""
+    ).replace(/[^a-zA-Z0-9, \-]/g, "").trim().substring(0, 50);
     if (!crop) throw httpError("invalid-argument", "Missing or invalid crop.");
 
     // Sanitize location input to prevent prompt injection (unchanged from Firebase).
