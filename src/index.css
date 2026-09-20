@@ -1,7 +1,69 @@
 @import "tailwindcss";
 
+@theme {
+  /* Typography */
+  --font-sans: "Manrope", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-kn: "Noto Sans Kannada", "Manrope", ui-sans-serif, system-ui, sans-serif;
+
+  /* Warm agricultural editorial palette */
+  --color-canvas: #f7f5ef;
+  --color-surface: #ffffff;
+  --color-sunken: #efede4;
+  --color-line: #e2dfd3;
+
+  --color-ink: #1b2a21;
+  --color-muted: #5b6b60;
+
+  --color-primary: #1f5f3f;
+  --color-primary-deep: #174a31;
+  --color-primary-soft: #e3efe7;
+
+  --color-accent: #e3a72f;
+  --color-accent-deep: #c98f1d;
+  --color-accent-soft: #faf0dc;
+
+  /* Semantic */
+  --color-danger: #9b2c2c;
+  --color-danger-soft: #f8e9e6;
+  --color-sunken-deep: #e6e3d6;
+
+  /* Radii */
+  --radius-card: 16px;
+  --radius-control: 12px;
+
+  /* Shadows — restrained */
+  --shadow-card: 0 1px 2px rgb(27 42 33 / 0.05);
+  --shadow-raise: 0 8px 24px -12px rgb(27 42 33 / 0.18);
+}
+
 @layer base {
+  html {
+    background-color: var(--color-canvas);
+  }
+
   body {
     @apply antialiased;
   }
+
+  ::selection {
+    background-color: var(--color-primary-soft);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* Consistent visible focus across every control. Kept outside Tailwind's
+   layers so no utility/preflight rule can override the branded color. */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
