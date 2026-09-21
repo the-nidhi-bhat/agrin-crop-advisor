@@ -67,3 +67,26 @@
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
+
+/* Subtle scan-line sweep over the photo while analyzing. */
+@keyframes agrin-scan-sweep {
+  0%,
+  100% {
+    top: 8%;
+    opacity: 0.15;
+  }
+  15% {
+    opacity: 0.9;
+  }
+  50% {
+    top: 90%;
+    opacity: 0.9;
+  }
+  85% {
+    opacity: 0.15;
+  }
+}
+
+.agrin-scanline {
+  animation: agrin-scan-sweep 3.4s ease-in-out infinite;
+}
