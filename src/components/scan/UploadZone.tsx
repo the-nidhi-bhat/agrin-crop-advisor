@@ -1,14 +1,38 @@
 import { Camera, ImagePlus } from 'lucide-react';
 import { useRef } from 'react';
 
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
 interface UploadZoneProps {
   preview: string | null;
   onChange: (file: File) => void;
-  error?: string | null;
+  onError: (message: string) => void;
+  label?: string;
 }
 
-export function UploadZone({ preview, onChange, error }: UploadZoneProps) {
+function validateImage(file: File): string | null {
+  if (!file.type.startsWith('image/')) {
+    return 'That file is not an image. Choose a clear photo of the leaf.';
+  }
+  if (file.size > MAX_IMAGE_BYTES) {
+    return 'The photo is larger than 5 MB. Choose a smaller one.';
+  }
+  return null;
+}
+
+export function UploadZone({ preview, onChange, onError, label }: UploadZoneProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = (file: File | undefined) => {
+    if (!file) return;
+    const problem = validateImage(file);
+    if (problem) {
+      onError(problem);
+      return;
+    }
+    onError('');
+    onChange(file);
+  };
 
   return (
     <div>
@@ -22,7 +46,11 @@ export function UploadZone({ preview, onChange, error }: UploadZoneProps) {
       >
         {preview ? (
           <>
-            <img src={preview} alt="Selected leaf preview" className="absolute inset-0 h-full w-full object-cover" />
+            <img
+              src={preview}
+              alt="Selected crop photo preview"
+              className="absolute inset-0 h-full w-full object-cover"
+            />
             <span className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-surface/95 px-3 py-1.5 text-xs font-semibold text-ink shadow-raise">
               <ImagePlus size={14} aria-hidden />
               Change photo
@@ -35,7 +63,7 @@ export function UploadZone({ preview, onChange, error }: UploadZoneProps) {
             </span>
             <span className="text-base font-bold text-ink">Take or choose a photo</span>
             <span className="max-w-[16rem] text-center text-sm leading-snug">
-              A clear close-up of the leaf works best — good light, leaf filling the frame.
+              {label ?? 'A clear close-up of the affected leaf works best — good light, leaf filling the frame.'}
             </span>
           </>
         )}
@@ -47,13 +75,10 @@ export function UploadZone({ preview, onChange, error }: UploadZoneProps) {
         accept="image/*"
         className="sr-only"
         onChange={(e) => {
-          const selected = e.target.files?.[0];
-          if (selected) onChange(selected);
+          handleFile(e.target.files?.[0]);
           e.currentTarget.value = '';
         }}
       />
-
-      {error && <p className="mt-2 text-sm font-medium text-danger">{error}</p>}
     </div>
   );
 }
