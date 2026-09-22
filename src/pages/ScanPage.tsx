@@ -3,7 +3,7 @@ import { ImageIcon, RefreshCw, ScanLine, ShieldCheck, SunMedium } from 'lucide-r
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { StagedLoader } from '../components/StagedLoader';
 import { CropSelector } from '../components/scan/CropSelector';
-import { ScanResult } from '../components/scan/ScanResult';
+import { ScanResult, type ScanResultData } from '../components/scan/ScanResult';
 import { UploadZone } from '../components/scan/UploadZone';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
@@ -28,7 +28,7 @@ interface AdvisoryResult {
 }
 interface DeliverResult {
   translatedAdvisory: string;
-  smsStatus: { simulated: boolean } | null;
+  smsStatus: { simulated: boolean; to?: string | null } | null;
 }
 
 // ponytail: 45s heuristic only drives the visible "taking longer than expected"
@@ -73,7 +73,7 @@ export function ScanPage() {
   const [phase, setPhase] = useState<Phase>('form');
   const [step, setStep] = useState(0);
   const [isSlow, setIsSlow] = useState(false);
-  const [result, setResult] = useState<Record<string, unknown> | null>(null);
+  const [result, setResult] = useState<ScanResultData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const slowTimer = useRef<number | null>(null);
@@ -172,7 +172,7 @@ export function ScanPage() {
         weather: advisory.weather,
         translatedAdvisory: deliver.translatedAdvisory,
         smsStatus: deliver.smsStatus,
-      });
+      } satisfies ScanResultData);
       setPhase('result');
     } catch (err) {
       if (slowTimer.current) window.clearTimeout(slowTimer.current);
@@ -197,8 +197,8 @@ export function ScanPage() {
     );
   }
 
-  if (phase === 'result') {
-    return <ScanResult result={result} crop={crop} onReset={startOver} />;
+  if (phase === 'result' && result) {
+    return <ScanResult result={result} crop={crop} imageUrl={preview} onReset={startOver} />;
   }
 
   return (
