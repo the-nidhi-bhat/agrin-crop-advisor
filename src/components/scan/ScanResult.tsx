@@ -33,7 +33,7 @@ interface ScanResultProps {
 
 type HealthState = 'healthy' | 'concern' | 'unrecognized';
 
-const HEALTH_STATE_META: Record<
+export const HEALTH_STATE_META: Record<
   HealthState,
   { label: string; dot: string; text: string }
 > = {

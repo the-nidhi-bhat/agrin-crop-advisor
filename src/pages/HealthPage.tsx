@@ -1,6 +1,6 @@
 import { AlertCircle, ArrowRight, Clock, Leaf, ScanLine } from 'lucide-react';
 import { useCropHealth, type CropHealthScan } from '../hooks/useCropHealth';
-import { confidenceTone, healthState } from '../components/scan/ScanResult';
+import { confidenceTone, healthState, HEALTH_STATE_META } from '../components/scan/ScanResult';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
@@ -47,13 +47,7 @@ function ScanRow({ scan, thumb }: ScanRowProps) {
           <p className="font-semibold text-ink">{scanLabel(scan)}</p>
           {state && scan.status === 'success' && (
             <span
-              className={`h-2 w-2 shrink-0 rounded-full ${
-                state === 'healthy'
-                  ? 'bg-primary'
-                  : state === 'concern'
-                    ? 'bg-accent'
-                    : 'bg-muted'
-              }`}
+              className={`h-2 w-2 shrink-0 rounded-full ${HEALTH_STATE_META[state].dot}`}
               aria-hidden
             />
           )}
@@ -74,6 +68,7 @@ export function HealthPage() {
   const { scans, thumbnails, error, reload } = useCropHealth();
 
   const latest = scans?.[0];
+  const latestState = latest?.disease ? healthState(latest.disease) : null;
   const latestSuccess =
     latest?.status === 'success'
       ? latest
@@ -148,21 +143,9 @@ export function HealthPage() {
                         <h2 className="text-2xl font-bold tracking-tight text-ink">
                           {latest.disease ?? 'Scan completed'}
                         </h2>
-                        {latest.disease && healthState(latest.disease) && (
-                          <span
-                            className={`mt-1 text-sm font-semibold ${
-                              healthState(latest.disease) === 'healthy'
-                                ? 'text-primary'
-                                : healthState(latest.disease) === 'concern'
-                                  ? 'text-[#7a5a12]'
-                                  : 'text-muted'
-                            }`}
-                          >
-                            {healthState(latest.disease) === 'healthy'
-                              ? 'Looks healthy'
-                              : healthState(latest.disease) === 'concern'
-                                ? 'Possible issue'
-                                : 'Pattern not recognized'}
+                        {latestState && latest.status === 'success' && (
+                          <span className={`mt-1 text-sm font-semibold ${HEALTH_STATE_META[latestState].text}`}>
+                            {HEALTH_STATE_META[latestState].label}
                           </span>
                         )}
                       </div>
