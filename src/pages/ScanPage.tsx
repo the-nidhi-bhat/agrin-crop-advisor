@@ -124,7 +124,7 @@ export function ScanPage() {
       return;
     }
     if (!user) {
-      setError('Please sign in to scan your crop.');
+      setError('Your scan session is still connecting. Please reload and try again.');
       return;
     }
 
