@@ -43,7 +43,7 @@ const HEALTH_STATE_META: Record<
 };
 
 // The state comes only from the model's own disease label — never invented.
-function healthState(disease?: string): HealthState | null {
+export function healthState(disease?: string | null): HealthState | null {
   if (!disease) return null;
   const d = disease.trim().toLowerCase().replace(/[.,!?।\s]+$/, '');
   if (d === 'healthy') return 'healthy';
@@ -59,7 +59,7 @@ function sentencePoints(text: string): string[] {
     .filter(Boolean);
 }
 
-function confidenceTone(confidence?: string | null) {
+export function confidenceTone(confidence?: string | null) {
   switch (confidence) {
     case 'High':
       return 'soft' as const;
