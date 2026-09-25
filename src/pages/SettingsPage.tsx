@@ -65,15 +65,15 @@ export function SettingsPage() {
       <Card>
         <h3 className="font-bold text-ink">Language</h3>
         <p className="mt-1 text-sm text-muted">
-          AgriN guidance is written in English and translated to Kannada. Your choice here becomes
-          the default guidance language for new scans.
+          AgriN guidance is written in English and translated to the language you choose. Your
+          choice here becomes the default guidance language for new scans.
         </p>
         <div className="mt-4">
           <LanguageSelector value={language.id} onChange={setLanguage} />
         </div>
         <p className="mt-3 text-xs text-muted">
-          English and Kannada are available today. Hindi, Marathi, Telugu, Tamil, Malayalam, Bengali,
-          and Gujarati are coming soon.
+          All nine languages are available. Voice availability depends on the text-to-speech voices
+          installed on your device.
         </p>
       </Card>
 
@@ -98,7 +98,8 @@ export function SettingsPage() {
             <h3 className="font-bold text-ink">Audio</h3>
             <p className="mt-1 text-sm text-muted">
               Guidance audio uses your device's built-in text-to-speech voice, in the language you
-              choose on a result.
+              choose on a result. If that language's voice isn't installed, AgriN says so instead of
+              pretending to speak it.
             </p>
           </div>
         </div>

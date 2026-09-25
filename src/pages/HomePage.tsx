@@ -20,7 +20,7 @@ const loop: { icon: LucideIcon; title: string; copy: string }[] = [
   {
     icon: ListChecks,
     title: 'Act',
-    copy: 'Step-by-step immediate advisory in English and Kannada you can act on with local resources.',
+    copy: 'Step-by-step immediate advisory in the language you choose, ready to act on with local resources.',
   },
   {
     icon: TrendingUp,
@@ -45,7 +45,8 @@ export function HomePage() {
         <p className="mt-4 max-w-xl text-lg leading-relaxed text-muted">
           AgriN helps you check the health of common Indian crops — tomato, chili, paddy, cotton,
           soybean, wheat, maize, groundnut, sugarcane, and onion. Scan a leaf, get a clear
-          diagnosis, and know exactly what to do next — in plain language, in Kannada too.
+          diagnosis, and know exactly what to do next — in plain language, in the language you
+          choose.
         </p>
         <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
           <Button to="/scan" size="lg" className="w-full sm:w-auto">
