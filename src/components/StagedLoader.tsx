@@ -64,7 +64,7 @@ export function StagedLoader({ crop, preview, currentStep, isSlow, onTryAgain }:
                   <span
                     className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors duration-300 ${
                       isDone || isActive
-                        ? 'bg-primary text-white'
+                        ? 'bg-primary text-on-primary'
                         : 'bg-sunken text-muted'
                     }`}
                   >

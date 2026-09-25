@@ -153,20 +153,20 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
   return (
     <div className="grid min-h-dvh lg:grid-cols-[1fr_1.05fr]">
       <div className="hidden items-center justify-center bg-primary p-10 lg:flex">
-        <div className="max-w-md text-white">
+        <div className="max-w-md text-on-primary">
           <div className="flex items-center gap-3">
-            <img src="/favicon.svg" alt="" aria-hidden className="h-9 w-9 rounded-[9px] bg-white/95 p-1" />
+            <img src="/favicon.svg" alt="" aria-hidden className="h-9 w-9 rounded-[9px] bg-on-primary/95 p-1" />
             <span className="text-2xl font-extrabold tracking-tight">AgriN</span>
-            <span className="rounded-full bg-white/15 px-2.5 py-0.5 text-xs font-bold text-white/90">
+            <span className="rounded-full bg-on-primary/15 px-2.5 py-0.5 text-xs font-bold text-on-primary/90">
             {t('common.beta')}
             </span>
           </div>
           <h2 className="mt-10 text-3xl font-bold leading-tight">{t('auth.leftTitle')}</h2>
-          <p className="mt-4 text-base leading-relaxed text-white/80">{t('auth.leftCopy')}</p>
-          <ul className="mt-10 space-y-4 text-sm text-white/85">
+          <p className="mt-4 text-base leading-relaxed text-on-primary/80">{t('auth.leftCopy')}</p>
+          <ul className="mt-10 space-y-4 text-sm text-on-primary/85">
             {leftSteps.map((step) => (
               <li key={step.titleKey} className="flex items-start gap-3">
-                <span className="mt-0.5 rounded-full bg-white/15 px-2.5 py-0.5 text-xs font-bold text-white/90">
+                <span className="mt-0.5 rounded-full bg-on-primary/15 px-2.5 py-0.5 text-xs font-bold text-on-primary/90">
                   {t(step.titleKey)}
                 </span>
                 <span className="leading-relaxed">{t(step.copyKey)}</span>
