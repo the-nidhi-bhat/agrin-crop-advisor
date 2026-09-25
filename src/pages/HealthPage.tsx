@@ -1,10 +1,18 @@
-import { AlertCircle, ArrowRight, Clock, Leaf, ScanLine } from 'lucide-react';
+import {
+  AlertCircle,
+  ArrowLeftRight,
+  ArrowRight,
+  Clock,
+  Leaf,
+  ScanLine,
+} from 'lucide-react';
 import { useCropHealth, type CropHealthScan } from '../hooks/useCropHealth';
 import {
   confidenceTone,
   healthState,
   HEALTH_STATE_LABEL,
   HEALTH_STATE_META,
+  type HealthState,
 } from '../components/scan/ScanResult';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
@@ -26,17 +34,34 @@ function scanLabel(scan: CropHealthScan, t: ReturnType<typeof useT>): string {
   return t('health.stillProcessing');
 }
 
-interface ScanRowProps {
+function timelineDot(scan: CropHealthScan): { dot: string; state: HealthState | null } {
+  if (scan.status === 'success') {
+    const state = healthState(scan.disease);
+    return { dot: state ? HEALTH_STATE_META[state].dot : 'bg-muted', state };
+  }
+  if (scan.status === 'failed') return { dot: 'bg-danger', state: null };
+  return { dot: 'bg-muted', state: null };
+}
+
+interface TimelineRowProps {
   scan: CropHealthScan;
   thumb: string | undefined;
   t: ReturnType<typeof useT>;
 }
 
-function ScanRow({ scan, thumb, t }: ScanRowProps) {
-  const state = healthState(scan.disease);
+function TimelineRow({ scan, thumb, t }: TimelineRowProps) {
+  const { dot, state } = timelineDot(scan);
 
   return (
-    <li className="flex items-center gap-4 py-3">
+    <li className="relative flex items-center gap-4 py-4 pl-9">
+      <span
+        className={`absolute left-[22px] top-1/2 h-3 w-3 -translate-y-1/2 rounded-full border-2 border-surface ${dot}`}
+        aria-hidden
+      />
+      <span
+        className="pointer-events-none absolute bottom-0 left-[26px] top-0 w-px bg-line"
+        aria-hidden
+      />
       {thumb ? (
         <img
           src={thumb}
@@ -56,10 +81,9 @@ function ScanRow({ scan, thumb, t }: ScanRowProps) {
         <div className="flex flex-wrap items-center gap-2">
           <p className="font-semibold text-ink">{scanLabel(scan, t)}</p>
           {state && scan.status === 'success' && (
-            <span
-              className={`h-2 w-2 shrink-0 rounded-full ${HEALTH_STATE_META[state].dot}`}
-              aria-hidden
-            />
+            <span className={`text-xs font-semibold ${HEALTH_STATE_META[state].text}`}>
+              {t(HEALTH_STATE_LABEL[state])}
+            </span>
           )}
           {scan.confidence && scan.status === 'success' && (
             <Badge tone={confidenceTone(scan.confidence)}>
@@ -73,6 +97,78 @@ function ScanRow({ scan, thumb, t }: ScanRowProps) {
         </p>
       </div>
     </li>
+  );
+}
+
+interface CompareProps {
+  earlier: CropHealthScan;
+  latest: CropHealthScan;
+  thumbs: Record<string, string | undefined>;
+  t: ReturnType<typeof useT>;
+}
+
+function CompareBlock({ earlier, latest, thumbs, t }: CompareProps) {
+  const sides = [
+    {
+      scan: earlier,
+      label: t('health.compareEarlier'),
+    },
+    {
+      scan: latest,
+      label: t('health.compareLatest'),
+    },
+  ];
+
+  return (
+    <Card className="mt-3">
+      <h4 className="flex items-center gap-2 text-sm font-bold text-ink">
+        <ArrowLeftRight size={16} aria-hidden className="text-primary" />
+        {t('health.compareTitle')}
+      </h4>
+      <p className="mt-1 text-xs text-muted">{t('health.compareNoClaim')}</p>
+      <div className="mt-3 grid grid-cols-2 gap-3">
+        {sides.map(({ scan, label }) => {
+          const state = healthState(scan.disease);
+          return (
+            <div
+              key={scan.id}
+              className="rounded-card border border-line bg-sunken/40 p-3"
+            >
+              <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted">
+                {label}
+              </p>
+              {thumbs[scan.id] ? (
+                <img
+                  src={thumbs[scan.id]}
+                  alt={t('health.leafPhotoAlt', {
+                    crop: scan.crop,
+                    date: formatDate(scan.created_at),
+                  })}
+                  loading="lazy"
+                  className="themed-photo mt-2 aspect-[4/3] w-full rounded-card border border-line bg-sunken object-cover"
+                />
+              ) : (
+                <span className="mt-2 flex aspect-[4/3] w-full items-center justify-center rounded-card border border-line bg-sunken text-muted">
+                  <Leaf size={20} aria-hidden />
+                </span>
+              )}
+              <p className="mt-2 break-words text-sm font-semibold text-ink">
+                {scan.disease ?? t('health.scanCompleted')}
+              </p>
+              {state && (
+                <p className={`text-xs font-semibold ${HEALTH_STATE_META[state].text}`}>
+                  {t(HEALTH_STATE_LABEL[state])}
+                </p>
+              )}
+              <p className="mt-1 flex items-center gap-1 text-[11px] text-muted">
+                <Clock size={11} aria-hidden />
+                {formatDate(scan.created_at)}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    </Card>
   );
 }
 
@@ -204,6 +300,13 @@ export function HealthPage() {
             </Card>
           )}
 
+          {scans.length === 1 && (
+            <Card className="border-line bg-sunken/60">
+              <h3 className="text-sm font-bold text-ink">{t('health.firstScan')}</h3>
+              <p className="mt-1 text-sm text-muted">{t('health.firstScanCopy')}</p>
+            </Card>
+          )}
+
           {latestSuccess?.advisory_text && (
             <Card>
               <h3 className="text-xs font-bold uppercase tracking-[0.12em] text-primary">
@@ -222,33 +325,55 @@ export function HealthPage() {
           )}
 
           <div className="space-y-8">
-            {groups.map((group) => (
-              <section key={group.crop} aria-labelledby={`health-${group.crop}`}>
-                <div className="mb-1 flex flex-wrap items-baseline gap-2">
-                  <h3 id={`health-${group.crop}`} className="text-lg font-bold text-ink">
-                    {group.crop}
-                  </h3>
-                  <span className="text-xs font-semibold text-muted">
-                    {group.scans.length}{' '}
-                    {group.scans.length === 1
-                      ? t('health.scanCountSingular')
-                      : t('health.scanCountPlural')}
-                  </span>
-                </div>
-                <Card className="divide-y divide-line p-0">
-                  <ul>
-                    {group.scans.map((scan) => (
-                      <ScanRow
-                        key={scan.id}
-                        scan={scan}
-                        thumb={thumbnails[scan.id]}
+            {groups.map((group) => {
+              const successes = group.scans.filter((s) => s.status === 'success');
+              const latestSuccessInGroup = successes[0];
+              const earlier = successes[successes.length - 1];
+
+              return (
+                <section key={group.crop} aria-labelledby={`health-${group.crop}`}>
+                  <div className="mb-1 flex flex-wrap items-baseline gap-2">
+                    <h3 id={`health-${group.crop}`} className="text-lg font-bold text-ink">
+                      {group.crop}
+                    </h3>
+                    <span className="text-xs font-semibold text-muted">
+                      {group.scans.length}{' '}
+                      {group.scans.length === 1
+                        ? t('health.scanCountSingular')
+                        : t('health.scanCountPlural')}
+                    </span>
+                  </div>
+                  <Card className="p-0">
+                    <ul className="px-3">
+                      {group.scans.map((scan) => (
+                        <TimelineRow
+                          key={scan.id}
+                          scan={scan}
+                          thumb={thumbnails[scan.id]}
+                          t={t}
+                        />
+                      ))}
+                    </ul>
+                  </Card>
+                  {successes.length >= 2 &&
+                    latestSuccessInGroup &&
+                    earlier &&
+                    latestSuccessInGroup.id !== earlier.id && (
+                      <CompareBlock
+                        earlier={earlier}
+                        latest={latestSuccessInGroup}
+                        thumbs={thumbnails}
                         t={t}
                       />
-                    ))}
-                  </ul>
-                </Card>
-              </section>
-            ))}
+                    )}
+                  {successes.length < 2 && group.scans.length > 1 && (
+                    <p className="mt-2 px-3 text-xs text-muted">
+                      {t('health.compareNeedsMore')}
+                    </p>
+                  )}
+                </section>
+              );
+            })}
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-control border border-line bg-sunken/60 p-4">
