@@ -245,27 +245,23 @@ The demo walks the **golden path**, which was verified end-to-end during develop
 
 ## Screenshots
 
-Real captures from the running app.
+Real captures from the current AgriN UI.
 
-![Home](docs/screenshots/home.png)
+![Landing — light](docs/screenshots/landing-light.png)
 
-AgriN's home — a public landing page introducing the scan loop.
+The premium landing page in light mode, with hero imagery.
 
-![Scan — choose a crop and upload a leaf](docs/screenshots/scan.png)
+![Landing — dark](docs/screenshots/landing-dark.png)
+
+The dark theme applied to the landing page.
+
+![Scan](docs/screenshots/scan.png)
 
 The scan form: crop selector, photo upload with live preview, and optional location/phone fields.
 
-![Crop Health](docs/screenshots/health.png)
+![Mobile](docs/screenshots/mobile.png)
 
-Saved scans grouped by crop, with thumbnails and confidence labels.
-
-![Settings — account, language, and appearance](docs/screenshots/settings.png)
-
-Account management, language selection, and light/dark theme.
-
-![Sign in](docs/screenshots/signin.png)
-
-Supabase Auth — sign in, create an account, or reset a password.
+The responsive app on a mobile viewport.
 
 ---
 
