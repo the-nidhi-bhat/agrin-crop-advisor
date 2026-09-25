@@ -76,7 +76,7 @@ describe('HealthPage — real history', () => {
     renderPage();
 
     expect(await screen.findByRole('heading', { name: 'Early blight' })).toBeInTheDocument();
-    expect(screen.getByText('Possible issue')).toBeInTheDocument();
+    expect(screen.getAllByText('Possible issue').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('Tomato').length).toBeGreaterThanOrEqual(2);
     expect(screen.getAllByText('Confidence: Medium').length).toBeGreaterThanOrEqual(1);
 
@@ -143,5 +143,47 @@ describe('HealthPage — query failure', () => {
     );
     expect(screen.getByText(/connection refused/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument();
+  });
+});
+
+describe('HealthPage — comparison view', () => {
+  it('shows an honest earlier/latest comparison without trend claims', async () => {
+    mockDiagnosesQuery(scanFixture, null);
+    mockSignedUrl.mockImplementation(async (path: string) => ({ data: { signedUrl: `https://obj/${path}` }, error: null }));
+    renderPage();
+
+    expect(await screen.findByRole('heading', { name: 'Early blight' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Before / After' })).toBeInTheDocument();
+    expect(screen.getByText('Earlier scan')).toBeInTheDocument();
+    expect(screen.getByText('Latest scan')).toBeInTheDocument();
+    expect(screen.getAllByText('Healthy').length).toBeGreaterThanOrEqual(1);
+    expect(screen.queryByText(/declining|improving/)).not.toBeInTheDocument();
+  });
+});
+
+describe('HealthPage — first scan', () => {
+  it('welcomes a single first scan without an invented comparison', async () => {
+    mockDiagnosesQuery(
+      [
+        {
+          id: 'd1',
+          crop: 'Tomato',
+          status: 'success',
+          disease: 'Healthy',
+          confidence: null,
+          advisory_text: null,
+          image_path: 'user-1/d1.png',
+          created_at: now,
+        },
+      ],
+      null,
+    );
+    mockSignedUrl.mockImplementation(async (path: string) => ({ data: { signedUrl: `https://obj/${path}` }, error: null }));
+    renderPage();
+
+    expect(await screen.findByRole('heading', { name: /first scan/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Healthy' })).toBeInTheDocument();
+    expect(screen.getByText('1 scan')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Before / After' })).toBeNull();
   });
 });

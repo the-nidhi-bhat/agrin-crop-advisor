@@ -72,7 +72,7 @@ describe('ScanResult — hierarchy and structure', () => {
     ).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2, name: /01Diagnosis/ })).toBeInTheDocument();
     expect(
-      screen.getByRole('heading', { level: 2, name: /02Signs in the photo/ }),
+      screen.getByRole('heading', { level: 2, name: /02Why this result?/ }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole('heading', { level: 2, name: /03What to do now/ }),
@@ -149,7 +149,9 @@ describe('ScanResult — confidence honesty', () => {
 describe('ScanResult — symptoms', () => {
   it('turns multi-sentence symptoms into bullets', () => {
     renderResult();
-    const bullets = screen.getAllByRole('listitem');
+    const list = document.querySelector('ul.list-disc');
+    expect(list).not.toBeNull();
+    const bullets = list!.querySelectorAll('li');
     expect(bullets).toHaveLength(2);
     expect(bullets[0]).toHaveTextContent('Brown spots on the lower leaves.');
     expect(bullets[1]).toHaveTextContent('The edges are curling.');
@@ -157,7 +159,7 @@ describe('ScanResult — symptoms', () => {
 
   it('keeps a single short symptom as a readable paragraph', () => {
     renderResult({ result: makeResult({ symptoms: 'The leaf is yellowing.' }) });
-    expect(screen.queryAllByRole('listitem')).toHaveLength(0);
+    expect(document.querySelector('ul.list-disc')).toBeNull();
     expect(screen.getByText('The leaf is yellowing.')).toBeInTheDocument();
   });
 
@@ -166,12 +168,12 @@ describe('ScanResult — symptoms', () => {
       'First the lower leaves yellow. Then dark spots appear at the edges. The spots spread inward. ' +
       'Leaves eventually curl and drop. The plant may stall its growth.';
     renderResult({ result: makeResult({ symptoms: long }) });
-    expect(screen.getAllByRole('listitem')).toHaveLength(5);
+    expect(document.querySelector('ul.list-disc')?.querySelectorAll('li')).toHaveLength(5);
   });
 
   it('omits the symptoms section entirely when the backend gives none', () => {
     renderResult({ result: makeResult({ symptoms: '' }) });
-    expect(screen.queryByRole('heading', { name: '02 Signs in the photo' })).toBeNull();
+    expect(document.querySelector('ul.list-disc')).toBeNull();
   });
 });
 
@@ -396,5 +398,42 @@ describe('ScanResult — actions', () => {
     renderResult();
     const link = screen.getByRole('link', { name: 'Back to home' });
     expect(link).toHaveAttribute('href', '/');
+  });
+});
+
+describe('ScanResult — simple presentation mode', () => {
+  beforeEach(() => {
+    localStorage.setItem('agrin_presentation', 'simple');
+  });
+  afterEach(() => {
+    localStorage.removeItem('agrin_presentation');
+  });
+
+  it('renders the farmer-friendly structure with a monitoring link', () => {
+    renderResult();
+    expect(screen.getByText('What AgriN found')).toBeInTheDocument();
+    expect(screen.getByText('What you may notice')).toBeInTheDocument();
+    expect(screen.getByText('Do now')).toBeInTheDocument();
+    expect(screen.getAllByText('Keep watching').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText('Listen to the guidance')).toBeInTheDocument();
+    const monitor = screen.getByRole('link', { name: 'Keep monitoring this crop' });
+    expect(monitor).toHaveAttribute('href', '/health');
+  });
+
+  it('keeps evidence honest and scoped in simple mode', () => {
+    renderResult();
+    const list = document.querySelector('ul.list-disc');
+    expect(list).not.toBeNull();
+    expect(list!.querySelectorAll('li')).toHaveLength(2);
+    expect(list!.querySelectorAll('li')[0]).toHaveTextContent('Brown spots on the lower leaves.');
+    expect(screen.getByText('Confidence: High')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /02Why this result?/ })).toBeNull();
+  });
+
+  it('leaves the detailed numbered sections out', () => {
+    renderResult();
+    expect(screen.queryByRole('heading', { name: /01Diagnosis/ })).toBeNull();
+    expect(screen.queryByRole('heading', { name: /03What to do now/ })).toBeNull();
+    expect(screen.queryByRole('heading', { name: /04Keep monitoring/ })).toBeNull();
   });
 });
