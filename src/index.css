@@ -113,6 +113,11 @@
     background-color: var(--color-primary-soft);
   }
 
+  /* Photos (photos on photo pages and the hero) keep their warmth in dark mode */
+  .themed-photo {
+    filter: var(--agrin-img-filter);
+  }
+
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
