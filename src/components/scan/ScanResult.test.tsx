@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ScanResult, type ScanResultData } from './ScanResult';
 
 const KANNADA_TEXT = 'ಅನುಭವಿಸಿದ ಎಲೆಗಳನ್ನು ತೆಗೆದುಹಾಕಿ.';
@@ -156,13 +156,13 @@ describe('ScanResult — advisory honesty', () => {
     const advisory =
       'Remove and dispose of infected leaves. Keep the base dry and avoid watering overhead.';
     renderResult({ result: makeResult({ advisory }) });
-    expect(screen.getByText(advisory)).toBeInTheDocument();
+    expect(screen.getAllByText(advisory).length).toBeGreaterThan(0);
   });
 
   it('renders a long advisory without breaking', () => {
     const long = Array.from({ length: 6 }, (_, i) => `Step ${i + 1}: check the leaf again.`).join(' ');
     renderResult({ result: makeResult({ advisory: long }) });
-    expect(screen.getByText(long)).toBeInTheDocument();
+    expect(screen.getAllByText(long).length).toBeGreaterThan(0);
   });
 
   it('omits the advisory section when the backend provides none', () => {
@@ -176,33 +176,64 @@ describe('ScanResult — advisory honesty', () => {
   });
 });
 
-describe('ScanResult — Kannada guidance and TTS', () => {
-  it('renders Kannada guidance with lang="kn"', () => {
+describe('ScanResult — guidance language and audio', () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+  });
+
+  it('shows English guidance by default with a language switch', () => {
     renderResult();
-    expect(screen.getByRole('heading', { level: 3, name: 'ಕನ್ನಡದಲ್ಲಿ' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 3, name: 'Language guidance' })).toBeInTheDocument();
+    expect(screen.getByText('English guidance')).toBeInTheDocument();
+    expect(screen.getAllByText(makeResult().advisory).length).toBeGreaterThan(0);
+    expect(screen.getByRole('radio', { name: 'English' })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByRole('radio', { name: 'ಕನ್ನಡ' })).toHaveAttribute('aria-checked', 'false');
+    expect(screen.getByRole('button', { name: 'Play English audio' })).toBeInTheDocument();
+  });
+
+  it('switches to Kannada guidance with lang="kn" when chosen', () => {
+    renderResult();
+    fireEvent.click(screen.getByRole('radio', { name: 'ಕನ್ನಡ' }));
+    expect(screen.getByText('Kannada guidance')).toBeInTheDocument();
     const kannada = screen.getByText(KANNADA_TEXT);
     expect(kannada).toHaveAttribute('lang', 'kn');
+    expect(screen.getByRole('radio', { name: 'ಕನ್ನಡ' })).toHaveAttribute('aria-checked', 'true');
     expect(screen.getByRole('button', { name: 'Play Kannada audio' })).toBeInTheDocument();
   });
 
-  it('hides the Kannada section entirely when the backend returns none', () => {
-    renderResult({ result: makeResult({ translatedAdvisory: '' }) });
-    expect(screen.queryByText('ಕನ್ನಡದಲ್ಲಿ')).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Play Kannada audio' })).toBeNull();
+  it('persists a stored Kannada preference as the default view', () => {
+    window.localStorage.setItem('agrin_language', 'kn');
+    renderResult();
+    expect(screen.getByText(KANNADA_TEXT)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Play Kannada audio' })).toBeInTheDocument();
   });
 
-  it('speaks the Kannada text via speechSynthesis', () => {
+  it('hides the Kannada option when the backend returns no translation', () => {
+    renderResult({ result: makeResult({ translatedAdvisory: '' }) });
+    expect(screen.queryByRole('radio', { name: 'ಕನ್ನಡ' })).toBeNull();
+    expect(screen.getByRole('radio', { name: 'English' })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByRole('button', { name: 'Play English audio' })).toBeInTheDocument();
+  });
+
+  it('speaks the Kannada text via speechSynthesis when Kannada is selected', () => {
     renderResult();
+    fireEvent.click(screen.getByRole('radio', { name: 'ಕನ್ನಡ' }));
     fireEvent.click(screen.getByRole('button', { name: 'Play Kannada audio' }));
-    const speech = globalThis.speechSynthesis as unknown as {
-      latest: { text: string };
-    };
+    const speech = globalThis.speechSynthesis as unknown as { latest: { text: string } };
     expect(speech.latest?.text).toBe(KANNADA_TEXT);
     expect(screen.getByRole('button', { name: 'Stop Kannada audio' })).toBeInTheDocument();
   });
 
+  it('speaks the English advisory when English is the selected guidance', () => {
+    renderResult();
+    fireEvent.click(screen.getByRole('button', { name: 'Play English audio' }));
+    const speech = globalThis.speechSynthesis as unknown as { latest: { text: string } };
+    expect(speech.latest?.text).toBe(makeResult().advisory);
+  });
+
   it('shows a fallback note when no Kannada voice is installed', () => {
     renderResult();
+    fireEvent.click(screen.getByRole('radio', { name: 'ಕನ್ನಡ' }));
     fireEvent.click(screen.getByRole('button', { name: 'Play Kannada audio' }));
     expect(
       screen.getByText(/closest available voice \(a Kannada voice is not installed/),
@@ -211,6 +242,7 @@ describe('ScanResult — Kannada guidance and TTS', () => {
 
   it('does not break the page when audio errors out', () => {
     renderResult();
+    fireEvent.click(screen.getByRole('radio', { name: 'ಕನ್ನಡ' }));
     fireEvent.click(screen.getByRole('button', { name: 'Play Kannada audio' }));
     const speech = globalThis.speechSynthesis as unknown as {
       latest: { onerror: (() => void) | null };

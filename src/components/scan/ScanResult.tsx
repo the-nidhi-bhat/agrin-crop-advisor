@@ -9,6 +9,8 @@ import {
   VolumeX,
 } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
+import { GUIDANCE_LANGUAGES, getLanguageById } from '../../lib/languages';
+import { useLanguage } from '../../hooks/useLanguage';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
@@ -82,6 +84,7 @@ function SectionTitle({ n, children }: { n: string; children: ReactNode }) {
 }
 
 export function ScanResult({ result, crop, imageUrl, onReset }: ScanResultProps) {
+  const { language, setLanguage } = useLanguage();
   const [isPlaying, setIsPlaying] = useState(false);
   const [usingFallbackVoice, setUsingFallbackVoice] = useState(false);
 
@@ -89,18 +92,28 @@ export function ScanResult({ result, crop, imageUrl, onReset }: ScanResultProps)
   const stateMeta = state ? HEALTH_STATE_META[state] : null;
   const symptomPoints = result?.symptoms ? sentencePoints(result.symptoms) : [];
 
+  const knAvailable = Boolean(result?.translatedAdvisory);
+  const guidanceAvailable = Boolean(result?.advisory);
+  const [langId, setLangId] = useState<string>(() =>
+    knAvailable && language.id === 'kn' ? 'kn' : 'en',
+  );
+  const currentLanguage = getLanguageById(langId);
+  const guidanceText = langId === 'kn' ? result.translatedAdvisory : result.advisory;
+  const ttsLocale = currentLanguage.ttsLocale ?? 'en-IN';
+  const voiceHint = ttsLocale.split('-')[0];
+
   const playAudio = () => {
-    if (!result?.translatedAdvisory) return;
+    if (!guidanceText) return;
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(result.translatedAdvisory);
+    const utterance = new SpeechSynthesisUtterance(guidanceText);
 
     const voices = window.speechSynthesis.getVoices();
-    const targetVoice = voices.find((v) => v.lang.startsWith('kn'));
+    const targetVoice = voices.find((v) => v.lang.toLowerCase().startsWith(voiceHint));
     if (targetVoice) {
       utterance.voice = targetVoice;
       setUsingFallbackVoice(false);
     } else {
-      utterance.lang = 'kn-IN';
+      utterance.lang = ttsLocale;
       setUsingFallbackVoice(true);
     }
 
@@ -108,6 +121,11 @@ export function ScanResult({ result, crop, imageUrl, onReset }: ScanResultProps)
     utterance.onend = () => setIsPlaying(false);
     utterance.onerror = () => setIsPlaying(false);
     window.speechSynthesis.speak(utterance);
+  };
+
+  const chooseGuidanceLanguage = (id: string) => {
+    setLangId(id);
+    setLanguage(id);
   };
 
   const smsTo =
@@ -212,29 +230,68 @@ export function ScanResult({ result, crop, imageUrl, onReset }: ScanResultProps)
         </div>
       </Card>
 
-      {/* Kannada guidance — secondary language option */}
-      {result.translatedAdvisory && (
+      {/* Guidance language — English or Kannada, chosen by the user and persisted */}
+      {guidanceAvailable && (
         <Card className="border-primary/20 bg-primary-soft/40">
-          <h3 className="font-bold text-ink">ಕನ್ನಡದಲ್ಲಿ</h3>
-          <p className="mt-0.5 text-xs font-semibold text-muted">Kannada guidance</p>
-          <p lang="kn" className="mt-2 font-kn text-lg leading-relaxed text-ink/80">
-            {result.translatedAdvisory}
-          </p>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <h3 className="font-bold text-ink">Language guidance</h3>
+            <div
+              role="radiogroup"
+              aria-label="Guidance language"
+              className="flex w-fit rounded-control border border-line bg-sunken p-0.5"
+            >
+              {GUIDANCE_LANGUAGES.filter((l) => l.id === 'en' || (l.id === 'kn' && knAvailable)).map(
+                (l) => (
+                  <button
+                    key={l.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={langId === l.id}
+                    onClick={() => chooseGuidanceLanguage(l.id)}
+                    className={`rounded-control px-3 py-1.5 text-sm font-semibold transition-colors ${
+                      langId === l.id
+                        ? 'bg-surface text-ink shadow-sm'
+                        : 'text-muted hover:text-ink'
+                    }`}
+                  >
+                    {l.nativeName}
+                  </button>
+                ),
+              )}
+            </div>
+          </div>
+          {langId === 'kn' && (
+            <>
+              <p className="mt-0.5 text-xs font-semibold text-muted">Kannada guidance</p>
+              <p lang="kn" className="mt-2 font-kn text-lg leading-relaxed text-ink/80">
+                {result.translatedAdvisory}
+              </p>
+            </>
+          )}
+          {langId === 'en' && (
+            <>
+              <p className="mt-0.5 text-xs font-semibold text-muted">English guidance</p>
+              <p className="mt-2 text-[15px] leading-relaxed text-ink/80">{result.advisory}</p>
+            </>
+          )}
           <Button
             variant="secondary"
             className="mt-4 w-full sm:w-auto"
             onClick={playAudio}
             disabled={isPlaying}
-            aria-label={isPlaying ? 'Stop Kannada audio' : 'Play Kannada audio'}
+            aria-label={isPlaying ? `Stop ${currentLanguage.name} audio` : `Play ${currentLanguage.name} audio`}
           >
             {isPlaying ? <VolumeX size={17} aria-hidden /> : <Volume2 size={17} aria-hidden />}
             {isPlaying ? 'Playing…' : 'Play audio'}
           </Button>
           {usingFallbackVoice && (
             <p className="mt-2 text-xs text-muted">
-              Playing in the closest available voice (a Kannada voice is not installed on this
-              device).
+              Playing in the closest available voice (a {currentLanguage.name} voice is not installed
+              on this device).
             </p>
+          )}
+          {langId === 'en' && knAvailable && (
+            <p className="mt-2 text-xs font-medium text-primary">ಕನ್ನಡದಲ್ಲಿ · Kannada translation available</p>
           )}
         </Card>
       )}
