@@ -6,7 +6,7 @@ The experience is built around one calm, practical loop:
 
 **Scan → Understand → Act → Monitor**
 
-- **Scan** — choose a crop (Tomato, Chili, or Paddy) and photograph an affected leaf.
+- **Scan** — choose a crop and photograph an affected leaf.
 - **Understand** — get a plain-language read on the likely condition, with a confidence level when the AI model provides one.
 - **Act** — receive step-by-step, action-oriented advisory in English and Kannada you can act on with local resources.
 - **Monitor** — Crop Health will group your scans by crop over time, building a picture of how each crop is tracking.
@@ -19,7 +19,7 @@ The experience is built around one calm, practical loop:
 
 ### Key features
 
-- **Crop selection** — choose Tomato, Chili, or Paddy with a keyboard-accessible, screen-reader-friendly picker.
+- **Crop selection** — choose from the supported crops below with a keyboard-accessible, screen-reader-friendly picker.
 - **Leaf photo upload** — attach an image of the affected leaf and see a live preview with validation.
 - **Image validation & preview** — image files only, up to 5 MB (same limit enforced server-side); review or change the photo before scanning.
 - **Guided scan experience** — a calm three-step flow with clear, honest analysis stages while the scan runs.
@@ -34,9 +34,7 @@ The experience is built around one calm, practical loop:
 
 ### Supported crops
 
-- Tomato
-- Chili
-- Paddy
+Currently supports crop selection for Tomato, Chili, Paddy, Cotton, Soybean, Wheat, Maize, Groundnut, Sugarcane, and Onion. The AI always diagnoses from the uploaded photo — listing a crop here is a supported selection, not a claim that every possible disease of that crop is covered.
 
 ## How a scan works
 

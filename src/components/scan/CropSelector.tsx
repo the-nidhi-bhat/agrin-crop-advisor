@@ -39,7 +39,7 @@ export function CropSelector({ value, onChange }: CropSelectorProps) {
   };
 
   return (
-    <div role="radiogroup" aria-label="Crop" className="grid grid-cols-3 gap-2">
+    <div role="radiogroup" aria-label="Crop" className="grid grid-cols-2 gap-2 sm:grid-cols-3">
       {CROPS.map((crop, index) => {
         const selected = value === crop.name;
         return (

@@ -4,6 +4,7 @@ import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { EmptyState } from '../components/ui/EmptyState';
 import { SectionHeader } from '../components/ui/SectionHeader';
+import { CROPS } from '../lib/crops';
 
 const loop: { icon: LucideIcon; title: string; copy: string }[] = [
   {
@@ -28,7 +29,7 @@ const loop: { icon: LucideIcon; title: string; copy: string }[] = [
   },
 ];
 
-const supported = ['Tomato', 'Chili', 'Paddy'];
+const supported = CROPS.map((crop) => crop.name);
 
 export function HomePage() {
   return (
@@ -42,8 +43,9 @@ export function HomePage() {
           Understand what is happening to your crop.
         </h1>
         <p className="mt-4 max-w-xl text-lg leading-relaxed text-muted">
-          AgriN helps you check the health of tomato, chili, and paddy crops. Scan a leaf, get a
-          clear diagnosis, and know exactly what to do next — in plain language, in Kannada too.
+          AgriN helps you check the health of common Indian crops — tomato, chili, paddy, cotton,
+          soybean, wheat, maize, groundnut, sugarcane, and onion. Scan a leaf, get a clear
+          diagnosis, and know exactly what to do next — in plain language, in Kannada too.
         </p>
         <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
           <Button to="/scan" size="lg" className="w-full sm:w-auto">
