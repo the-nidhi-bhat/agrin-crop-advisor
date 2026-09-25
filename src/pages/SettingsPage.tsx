@@ -1,4 +1,4 @@
-import { LogOut, MessageSquareText, Moon, ShieldCheck, Speaker, Sparkles, Sun } from 'lucide-react';
+import { ListChecks, LogOut, MessageSquareText, Moon, ScanLine, ShieldCheck, Speaker, Sparkles, Sun } from 'lucide-react';
 import { LanguageSelector } from '../components/settings/LanguageSelector';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
@@ -6,6 +6,7 @@ import { Card } from '../components/ui/Card';
 import { SectionHeader } from '../components/ui/SectionHeader';
 import { useLanguage } from '../hooks/useLanguage';
 import { useAuth } from '../hooks/useAuth';
+import { usePresentation, type PresentationSetting } from '../hooks/usePresentation';
 import { useTheme, type ThemeSetting } from '../hooks/useTheme';
 import { useT } from '../lib/strings';
 
@@ -15,6 +16,7 @@ export function SettingsPage() {
   const { user, signOut } = useAuth();
   const { language, setLanguage } = useLanguage();
   const { theme, setTheme } = useTheme();
+  const { presentation, setPresentation } = usePresentation();
   const t = useT();
   const isAnonymous = user?.is_anonymous ?? false;
   const displayName = user?.user_metadata?.full_name as string | undefined;
@@ -28,6 +30,11 @@ export function SettingsPage() {
     { id: 'light', label: t('settings.themeLight'), icon: Sun },
     { id: 'dark', label: t('settings.themeDark'), icon: Moon },
     { id: 'system', label: t('settings.themeSystem'), icon: Sun },
+  ];
+
+  const presentationOptions: { id: PresentationSetting; label: string; copy: string; icon: typeof Sun }[] = [
+    { id: 'detailed', label: t('settings.presentationDetailed'), copy: t('settings.presentationDetailedCopy'), icon: ListChecks },
+    { id: 'simple', label: t('settings.presentationSimple'), copy: t('settings.presentationSimpleCopy'), icon: ScanLine },
   ];
 
   return (
@@ -107,6 +114,43 @@ export function SettingsPage() {
           ))}
         </div>
         <p className="mt-3 text-xs text-muted">{t('settings.themeHint')}</p>
+      </Card>
+
+      <Card>
+        <h3 className="font-bold text-ink">{t('settings.presentation')}</h3>
+        <p className="mt-1 text-sm text-muted">{t('settings.presentationCopy')}</p>
+        <div
+          className="mt-4 grid gap-2 sm:grid-cols-2"
+          role="group"
+          aria-label={t('settings.presentation')}
+        >
+          {presentationOptions.map((option) => (
+            <button
+              key={option.id}
+              type="button"
+              aria-pressed={presentation === option.id}
+              onClick={() => setPresentation(option.id)}
+              className={`flex flex-col items-start gap-1 rounded-control border p-4 text-left transition-colors duration-150 ${
+                presentation === option.id
+                  ? 'border-primary bg-primary text-on-primary'
+                  : 'border-line bg-surface text-ink hover:bg-sunken'
+              }`}
+            >
+              <span className="flex items-center gap-2 text-sm font-semibold">
+                <option.icon size={16} aria-hidden />
+                {option.label}
+              </span>
+              <span
+                className={`text-xs ${
+                  presentation === option.id ? 'text-on-primary/80' : 'text-muted'
+                }`}
+              >
+                {option.copy}
+              </span>
+            </button>
+          ))}
+        </div>
+        <p className="mt-3 text-xs text-muted">{t('settings.presentationHint')}</p>
       </Card>
 
       <Card>
