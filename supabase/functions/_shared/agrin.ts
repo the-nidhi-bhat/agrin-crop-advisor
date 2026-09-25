@@ -12,6 +12,9 @@ import fileType from "file-type";
 export const GEMINI_MODEL = "gemini-3.5-flash-lite";
 export const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5242880
 const GEMINI_TIMEOUT_MS = 45_000; // bound each attempt so a hung call returns an honest 503 instead of a platform 504; 45s fits measured 5-8s typical + rare slow spikes
+// A hang is retried once, but only once: 2 x 45s + 0.7s backoff ~= 91s, inside the
+// 150s Free-plan edge wall clock / idle timeout.
+const GEMINI_TIMEOUT_ATTEMPTS = 2;
 
 export class ApiError extends Error {
   constructor(
@@ -211,21 +214,34 @@ export async function callGemini(
   let lastError: unknown;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const started = Date.now();
     try {
       const result = await model.generateContent(parts);
       const text = result.response.text().trim();
       if (!text) {
         throw httpError("internal", "The AI generated an empty response.");
       }
+      console.log(JSON.stringify({ ev: "gemini_ok", attempt, ms: Date.now() - started }));
       return text;
     } catch (err) {
-      // A timeout is not transient — retrying only stacks timeouts and burns
-      // the whole invocation. Surface it honestly as unavailable (503).
-      if (isTimeout(err)) {
-        throw httpError("unavailable", "The AI service timed out. Please try again in a moment.");
-      }
+      // Classify from the SDK's own fields only. The error message embeds the
+      // Gemini API error payload, so it is never logged.
+      const timedOut = isTimeout(err);
+      const status = geminiStatus(err);
+      console.warn(
+        JSON.stringify({
+          ev: "gemini_fail",
+          kind: timedOut ? "timeout" : status ? `http_${status}` : "other",
+          attempt,
+          ms: Date.now() - started,
+        }),
+      );
       lastError = err;
-      if (attempt < maxAttempts && isTransient(err)) {
+      // Timeouts ARE intermittent in production (a fresh request usually
+      // succeeds), so allow one more attempt -- capped separately so 3 x 45s
+      // cannot overrun the wall clock.
+      const cap = timedOut ? GEMINI_TIMEOUT_ATTEMPTS : maxAttempts;
+      if (attempt < cap && (timedOut || isTransient(err))) {
         await new Promise((r) => setTimeout(r, attempt * 700));
         continue;
       }
@@ -233,6 +249,9 @@ export async function callGemini(
     }
   }
 
+  if (isTimeout(lastError)) {
+    throw httpError("unavailable", "The AI service timed out. Please try again in a moment.");
+  }
   if (isTransient(lastError)) {
     throw httpError("unavailable", "AI service is busy. Please try again in a moment.");
   }
@@ -247,6 +266,16 @@ function isTimeout(err: unknown): boolean {
     name === "GoogleGenerativeAIAbortError" ||
     /timeout|timed ?out|abort|cancell?ed/i.test(msg)
   );
+}
+
+// @google/generative-ai@0.24.1 GoogleGenerativeAIFetchError carries the HTTP
+// status as a field. Read it instead of regexing the message, which embeds the
+// API error payload. Our own ApiError also has a .status, so exclude it — an
+// application error is not a Gemini HTTP response.
+function geminiStatus(err: unknown): number | null {
+  if (err instanceof ApiError) return null;
+  const s = (err as { status?: unknown } | null)?.status;
+  return typeof s === "number" ? s : null;
 }
 
 function isTransient(err: unknown): boolean {
