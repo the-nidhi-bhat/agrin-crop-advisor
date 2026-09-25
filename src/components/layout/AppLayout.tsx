@@ -1,19 +1,20 @@
 import { Home, ScanLine, Settings, Sprout, type LucideIcon } from 'lucide-react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { Brand } from './Brand';
+import { useT, type StringKey } from '../../lib/strings';
 
 interface NavItem {
   to: string;
-  label: string;
+  labelKey: StringKey;
   icon: LucideIcon;
   end?: boolean;
 }
 
 const navItems: NavItem[] = [
-  { to: '/', label: 'Home', icon: Home, end: true },
-  { to: '/scan', label: 'Scan', icon: ScanLine },
-  { to: '/health', label: 'Crop Health', icon: Sprout },
-  { to: '/settings', label: 'Settings', icon: Settings },
+  { to: '/', labelKey: 'nav.home', icon: Home, end: true },
+  { to: '/scan', labelKey: 'nav.scan', icon: ScanLine },
+  { to: '/health', labelKey: 'nav.health', icon: Sprout },
+  { to: '/settings', labelKey: 'nav.settings', icon: Settings },
 ];
 
 const railItemClass =
@@ -24,6 +25,7 @@ function railClassName(isActive: boolean) {
 }
 
 export function AppLayout() {
+  const t = useT();
   return (
     <div className="min-h-dvh bg-canvas text-ink">
       <div className="mx-auto flex h-dvh w-full max-w-[1280px]">
@@ -32,23 +34,20 @@ export function AppLayout() {
           <NavLink to="/" end aria-label="AgriN home">
             <Brand />
           </NavLink>
-          <p className="mt-1 pl-9 text-xs text-muted">Crop health companion</p>
+          <p className="mt-1 pl-9 text-xs text-muted">{t('layout.tagline')}</p>
 
-          <nav aria-label="Main" className="mt-8 space-y-1">
+          <nav aria-label={t('layout.navMain')} className="mt-8 space-y-1">
             {navItems.map((item) => (
               <NavLink key={item.to} to={item.to} end={item.end} className={({ isActive }) => railClassName(isActive)}>
                 <item.icon size={20} aria-hidden />
-                {item.label}
+                {t(item.labelKey)}
               </NavLink>
             ))}
           </nav>
 
           <div className="mt-auto rounded-card border border-line bg-sunken/60 p-4">
-            <p className="text-xs font-semibold text-ink">AI-assisted guidance</p>
-            <p className="mt-1 text-xs leading-relaxed text-muted">
-              Diagnoses are advisory only. Always consult a local agricultural officer before
-              applying treatments.
-            </p>
+            <p className="text-xs font-semibold text-ink">{t('layout.railTitle')}</p>
+            <p className="mt-1 text-xs leading-relaxed text-muted">{t('layout.railCopy')}</p>
           </div>
         </aside>
 
@@ -60,7 +59,7 @@ export function AppLayout() {
               <Brand />
             </NavLink>
             <span className="rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-bold text-primary">
-              Beta
+              {t('common.beta')}
             </span>
           </header>
 
@@ -74,7 +73,7 @@ export function AppLayout() {
 
       {/* Mobile bottom nav */}
       <nav
-        aria-label="Main"
+        aria-label={t('layout.navMain')}
         className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
       >
         {navItems.map((item) => (
@@ -99,7 +98,7 @@ export function AppLayout() {
                     isActive ? 'text-primary' : 'text-muted'
                   }`}
                 >
-                  {item.label}
+                  {t(item.labelKey)}
                 </span>
               </>
             )}

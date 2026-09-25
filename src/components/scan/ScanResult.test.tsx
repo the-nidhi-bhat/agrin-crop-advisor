@@ -239,7 +239,7 @@ describe('ScanResult — guidance language and audio', () => {
     window.localStorage.setItem('agrin_language', 'kn');
     renderResult();
     expect(screen.getAllByText(KANNADA_TEXT)[0]).toHaveAttribute('lang', 'kn');
-    expect((languageSelect() as HTMLSelectElement).value).toBe('kn');
+    expect((screen.getByRole('combobox') as HTMLSelectElement).value).toBe('kn');
   });
 
   it('loads guidance in a stored language that has no cached translation', async () => {
@@ -248,7 +248,7 @@ describe('ScanResult — guidance language and audio', () => {
     renderResult();
     const hindi = await screen.findByText(HINDI_TEXT);
     expect(hindi).toHaveAttribute('lang', 'hi');
-    expect((languageSelect() as HTMLSelectElement).value).toBe('hi');
+    expect((screen.getByRole('combobox') as HTMLSelectElement).value).toBe('hi');
     expect(mockTranslate).toHaveBeenCalledWith('d1', 'hi');
   });
 

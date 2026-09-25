@@ -4,6 +4,7 @@ import { WifiOff } from "lucide-react";
 import { Button } from "../components/ui/Button";
 import { humanizeAuthError } from "../lib/humanizeAuthError";
 import { supabase } from "../lib/supabase";
+import { useT } from "../lib/strings";
 
 export interface AuthResult {
   error: string | null;
@@ -32,9 +33,6 @@ const AuthContext = createContext<AuthContextType>({
   updatePassword: async () => ({ error: null }),
   signedOut: false,
 });
-
-const AUTH_UNAVAILABLE =
-  "AgriN could not connect to its service. Check your connection and try again.";
 
 // Fallback account for local stacks where anonymous sign-ins are disabled.
 // Persisted so a fresh page load resolves to the same session.
@@ -108,6 +106,7 @@ async function ensureSignedIn(): Promise<SignInStatus> {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const t = useT();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [unavailable, setUnavailable] = useState(false);
@@ -223,8 +222,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-danger-soft text-danger" aria-hidden>
             <WifiOff size={22} />
           </div>
-          <h1 className="mt-4 text-lg font-bold text-ink">Couldn't reach AgriN</h1>
-          <p className="mt-2 text-sm leading-relaxed text-muted">{AUTH_UNAVAILABLE}</p>
+          <h1 className="mt-4 text-lg font-bold text-ink">{t('authUnavailable.title')}</h1>
+          <p className="mt-2 text-sm leading-relaxed text-muted">{t('authUnavailable.copy')}</p>
           <Button
             className="mt-6 w-full"
             onClick={() => {
@@ -235,7 +234,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               setAttempt((n) => n + 1);
             }}
           >
-            Try again
+            {t('common.tryAgain')}
           </Button>
         </div>
       </div>
