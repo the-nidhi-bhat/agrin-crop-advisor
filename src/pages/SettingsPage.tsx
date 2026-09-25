@@ -1,4 +1,4 @@
-import { LogOut, MessageSquareText, ShieldCheck, Speaker, Sparkles } from 'lucide-react';
+import { LogOut, MessageSquareText, Moon, ShieldCheck, Speaker, Sparkles, Sun } from 'lucide-react';
 import { LanguageSelector } from '../components/settings/LanguageSelector';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
@@ -6,6 +6,7 @@ import { Card } from '../components/ui/Card';
 import { SectionHeader } from '../components/ui/SectionHeader';
 import { useLanguage } from '../hooks/useLanguage';
 import { useAuth } from '../hooks/useAuth';
+import { useTheme, type ThemeSetting } from '../hooks/useTheme';
 import { useT } from '../lib/strings';
 
 const APP_VERSION = '0.6.0';
@@ -13,6 +14,7 @@ const APP_VERSION = '0.6.0';
 export function SettingsPage() {
   const { user, signOut } = useAuth();
   const { language, setLanguage } = useLanguage();
+  const { theme, setTheme } = useTheme();
   const t = useT();
   const isAnonymous = user?.is_anonymous ?? false;
   const displayName = user?.user_metadata?.full_name as string | undefined;
@@ -21,6 +23,12 @@ export function SettingsPage() {
     : isAnonymous
       ? t('settings.badgeAnon')
       : t('settings.badgeAccount');
+
+  const themeOptions: { id: ThemeSetting; label: string; icon: typeof Sun }[] = [
+    { id: 'light', label: t('settings.themeLight'), icon: Sun },
+    { id: 'dark', label: t('settings.themeDark'), icon: Moon },
+    { id: 'system', label: t('settings.themeSystem'), icon: Sun },
+  ];
 
   return (
     <div className="space-y-6">
@@ -75,6 +83,30 @@ export function SettingsPage() {
           <LanguageSelector value={language.id} onChange={setLanguage} />
         </div>
         <p className="mt-3 text-xs text-muted">{t('settings.languageFooter')}</p>
+      </Card>
+
+      <Card>
+        <h3 className="font-bold text-ink">{t('settings.theme')}</h3>
+        <p className="mt-1 text-sm text-muted">{t('settings.themeCopy')}</p>
+        <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label={t('settings.theme')}>
+          {themeOptions.map((option) => (
+            <button
+              key={option.id}
+              type="button"
+              aria-pressed={theme === option.id}
+              onClick={() => setTheme(option.id)}
+              className={`inline-flex min-h-12 items-center gap-2 rounded-control border px-4 text-sm font-semibold transition-colors duration-150 ${
+                theme === option.id
+                  ? 'border-primary bg-primary text-on-primary'
+                  : 'border-line bg-surface text-ink hover:bg-sunken'
+              }`}
+            >
+              <option.icon size={16} aria-hidden />
+              {option.label}
+            </button>
+          ))}
+        </div>
+        <p className="mt-3 text-xs text-muted">{t('settings.themeHint')}</p>
       </Card>
 
       <Card>
