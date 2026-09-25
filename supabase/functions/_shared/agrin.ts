@@ -5,7 +5,9 @@ import { createClient } from "@supabase/supabase-js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import fileType from "file-type";
 
-export const GEMINI_MODEL = "gemini-3.6-flash";
+// gemini-3.6-flash's free-tier daily quota was exhausted (per-model cap; host probe 429 "You exceeded your current quota").
+// gemini-3.5-flash is live on the same free tier and returns the same vision+JSON contract (verified on real leaf photo 2026-09-25).
+export const GEMINI_MODEL = "gemini-3.5-flash";
 export const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5242880
 const GEMINI_TIMEOUT_MS = 45_000; // bound each attempt so a hung call returns an honest 503 instead of a platform 504; 45s fits measured 5-8s typical + rare slow spikes
 
