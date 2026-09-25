@@ -17,6 +17,7 @@ import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { controlClass } from '../ui/Field';
+import { useT, type StringKey } from '../../lib/strings';
 
 export interface ScanResultData {
   id: string;
@@ -40,11 +41,17 @@ type HealthState = 'healthy' | 'concern' | 'unrecognized';
 
 export const HEALTH_STATE_META: Record<
   HealthState,
-  { label: string; dot: string; text: string }
+  { dot: string; text: string }
 > = {
-  healthy: { label: 'Looks healthy', dot: 'bg-primary', text: 'text-primary' },
-  concern: { label: 'Possible issue', dot: 'bg-accent', text: 'text-[#7a5a12]' },
-  unrecognized: { label: 'Pattern not recognized', dot: 'bg-muted', text: 'text-muted' },
+  healthy: { dot: 'bg-primary', text: 'text-primary' },
+  concern: { dot: 'bg-accent', text: 'text-[#7a5a12]' },
+  unrecognized: { dot: 'bg-muted', text: 'text-muted' },
+};
+
+export const HEALTH_STATE_LABEL: Record<HealthState, StringKey> = {
+  healthy: 'healthLabel.healthy',
+  concern: 'healthLabel.concern',
+  unrecognized: 'healthLabel.unrecognized',
 };
 
 // The state comes only from the model's own disease label — never invented.
@@ -89,6 +96,7 @@ function SectionTitle({ n, children }: { n: string; children: ReactNode }) {
 export function ScanResult({ result, crop, imageUrl, onReset }: ScanResultProps) {
   const { language, setLanguage } = useLanguage();
   const { isSupported, isSpeaking, voices, speak, stop } = useTTS();
+  const t = useT();
 
   // Guidance is shown in the persisted language. Translations are cached per
   // language during this visit; English and any stored Kannada are immediate,
@@ -149,7 +157,7 @@ export function ScanResult({ result, crop, imageUrl, onReset }: ScanResultProps)
       setLangId(translations[previous] ? previous : 'en');
       setTranslateError({
         language: id,
-        message: err instanceof Error ? err.message : 'AgriN could not load the guidance.',
+        message: err instanceof Error ? err.message : t('result.couldNotLoadFallback'),
       });
     } finally {
       if (requestRef.current === request) setIsTranslating(false);
@@ -170,33 +178,30 @@ export function ScanResult({ result, crop, imageUrl, onReset }: ScanResultProps)
       {/* Result header */}
       <div className="space-y-2">
         <p className="text-xs font-bold uppercase tracking-[0.12em] text-primary">
-          {crop} · Scan result
+          {t('result.eyebrow', { crop })}
         </p>
         <h1 className="text-3xl font-extrabold tracking-tight text-ink">
-          Here's what we found
+          {t('result.title')}
         </h1>
-        <p className="text-sm text-muted">
-          AI-assisted guidance is advisory only — not a professional agricultural diagnosis.
-          Confirm any treatment with your local agricultural extension officer.
-        </p>
+        <p className="text-sm text-muted">{t('result.caveat')}</p>
       </div>
 
       {/* 01 — Diagnosis */}
       <Card className="border-primary/20 bg-primary-soft/40">
-        <SectionTitle n="01">Diagnosis</SectionTitle>
+        <SectionTitle n="01">{t('result.diagnosis')}</SectionTitle>
         <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start">
           {imageUrl && (
             <img
               src={imageUrl}
-              alt={`Photo of the ${crop} leaf this result is based on`}
+              alt={t('result.photoAlt', { crop })}
               className="h-24 w-24 shrink-0 rounded-card border border-line object-cover"
             />
           )}
           <div className="min-w-0 flex-1 space-y-2.5">
-            {stateMeta && (
+            {stateMeta && state !== null && (
               <p className={`flex items-center gap-2 text-sm font-semibold ${stateMeta.text}`}>
                 <span className={`h-2 w-2 shrink-0 rounded-full ${stateMeta.dot}`} aria-hidden />
-                {stateMeta.label}
+                {t(HEALTH_STATE_LABEL[state])}
               </p>
             )}
             <h3 className="text-2xl font-bold tracking-tight text-ink">{result.disease}</h3>
@@ -206,7 +211,7 @@ export function ScanResult({ result, crop, imageUrl, onReset }: ScanResultProps)
               </span>
               {result.confidence && (
                 <Badge tone={confidenceTone(result.confidence)}>
-                  Confidence: {result.confidence}
+                  {t('result.confidence', { value: result.confidence })}
                 </Badge>
               )}
             </div>
@@ -217,7 +222,7 @@ export function ScanResult({ result, crop, imageUrl, onReset }: ScanResultProps)
       {/* 02 — Symptoms / why this result */}
       {result.symptoms && (
         <Card>
-          <SectionTitle n="02">Signs in the photo</SectionTitle>
+          <SectionTitle n="02">{t('result.signs')}</SectionTitle>
           {symptomPoints.length > 1 ? (
             <ul className="mt-3 list-disc space-y-2 pl-5 marker:text-primary">
               {symptomPoints.map((point, index) => (
@@ -235,7 +240,7 @@ export function ScanResult({ result, crop, imageUrl, onReset }: ScanResultProps)
       {/* 03 — Advisory */}
       {result.advisory && (
         <Card className="border-primary/20">
-          <SectionTitle n="03">What to do now</SectionTitle>
+          <SectionTitle n="03">{t('result.whatToDo')}</SectionTitle>
           <p className="mt-3 border-l-2 border-primary/30 pl-4 text-[15px] leading-relaxed text-ink/85">
             {result.advisory}
           </p>
@@ -249,14 +254,13 @@ export function ScanResult({ result, crop, imageUrl, onReset }: ScanResultProps)
             <Sprout size={22} aria-hidden />
           </span>
           <div className="min-w-0">
-            <SectionTitle n="04">Keep monitoring</SectionTitle>
+            <SectionTitle n="04">{t('result.monitoring')}</SectionTitle>
             <p className="mt-2 text-sm leading-relaxed text-muted">
-              This scan is saved to Crop Health, where your scans group by crop for a running
-              picture of how each crop is tracking over time.
+              {t('result.monitoringCopy')}
             </p>
             <Button variant="subtle" size="md" to="/health" className="mt-4">
               <Sprout size={17} aria-hidden />
-              View crop health
+              {t('result.viewHealth')}
             </Button>
           </div>
         </div>
@@ -267,16 +271,16 @@ export function ScanResult({ result, crop, imageUrl, onReset }: ScanResultProps)
         <Card className="border-primary/20 bg-primary-soft/40">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h3 className="font-bold text-ink">Language guidance</h3>
-              <p className="mt-1 text-xs text-muted">
-                The advisory is translated on demand in the language you choose.
-              </p>
+              <h3 className="font-bold text-ink">{t('result.languageGuidance')}</h3>
+              <p className="mt-1 text-xs text-muted">{t('result.translatedOnDemand')}</p>
             </div>
             <label className="flex min-w-0 flex-col gap-1 sm:min-w-44">
-              <span className="text-xs font-semibold text-muted">Guidance language</span>
+              <span className="text-xs font-semibold text-muted">
+                {t('result.guidanceLanguage')}
+              </span>
               <select
                 id="guidance-language"
-                aria-label="Guidance language"
+                aria-label={t('result.guidanceLanguage')}
                 value={langId}
                 onChange={(e) => void chooseGuidanceLanguage(e.target.value)}
                 className={`${controlClass} min-h-11`}
@@ -291,7 +295,9 @@ export function ScanResult({ result, crop, imageUrl, onReset }: ScanResultProps)
           </div>
           {guidanceText && (
             <>
-              <p className="mt-3 text-xs font-semibold text-muted">{shownLanguage.name} guidance</p>
+              <p className="mt-3 text-xs font-semibold text-muted">
+                {t('result.guidanceLabel', { language: shownLanguage.name })}
+              </p>
               <p
                 lang={shownLangId}
                 className={`mt-2 text-[15px] leading-relaxed text-ink/80 ${
@@ -304,7 +310,7 @@ export function ScanResult({ result, crop, imageUrl, onReset }: ScanResultProps)
           )}
           {isTranslating && (
             <p className="mt-2 text-xs font-medium text-muted">
-              Loading guidance in {currentLanguage.name}…
+              {t('result.loadingGuidance', { language: currentLanguage.name })}
             </p>
           )}
           {translateError && (
@@ -313,15 +319,17 @@ export function ScanResult({ result, crop, imageUrl, onReset }: ScanResultProps)
               className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-control border border-danger/30 bg-danger-soft px-3 py-2 text-xs font-medium text-danger"
             >
               <span>
-                Couldn't load guidance in {getLanguageById(translateError.language).name}.{' '}
-                {translateError.message}
+                {t('result.couldNotLoad', {
+                  language: getLanguageById(translateError.language).name,
+                  message: translateError.message,
+                })}
               </span>
               <button
                 type="button"
                 onClick={retryTranslation}
                 className="font-bold underline underline-offset-2"
               >
-                Try again
+                {t('common.tryAgain')}
               </button>
             </div>
           )}
@@ -331,20 +339,21 @@ export function ScanResult({ result, crop, imageUrl, onReset }: ScanResultProps)
             onClick={() => (isSpeaking ? stop() : speak(guidanceText, shownLanguage))}
             disabled={!guidanceText || !voiceAvailable}
             aria-label={
-              isSpeaking ? `Stop ${shownLanguage.name} audio` : `Play ${shownLanguage.name} audio`
+              isSpeaking
+                ? t('result.stopAria', { language: shownLanguage.name })
+                : t('result.playAria', { language: shownLanguage.name })
             }
           >
             {isSpeaking ? <VolumeX size={17} aria-hidden /> : <Volume2 size={17} aria-hidden />}
-            {isSpeaking ? 'Playing…' : 'Play audio'}
+            {isSpeaking ? t('result.playing') : t('result.play')}
           </Button>
           {!voiceAvailable && isSupported && (
             <p className="mt-2 text-xs text-muted">
-              A {shownLanguage.name} voice isn't installed on this device — you can still read the
-              guidance above.
+              {t('result.voiceMissing', { language: shownLanguage.name })}
             </p>
           )}
           {!isSupported && (
-            <p className="mt-2 text-xs text-muted">Audio isn't available on this device.</p>
+            <p className="mt-2 text-xs text-muted">{t('result.audioUnavailable')}</p>
           )}
         </Card>
       )}
@@ -362,10 +371,10 @@ export function ScanResult({ result, crop, imageUrl, onReset }: ScanResultProps)
           )}
           <p className="leading-relaxed text-[#6b4f10]">
             {result.smsStatus.simulated
-              ? `SMS delivery is simulated (no provider connected). The advisory would be sent to ${
-                  smsTo || 'your phone number'
-                }.`
-              : `SMS sent to ${smsTo || 'your phone number'}.`}
+              ? t('result.smsSimulated', {
+                  to: smsTo || t('result.yourPhoneNumber'),
+                })
+              : t('result.smsSent', { to: smsTo || t('result.yourPhoneNumber') })}
           </p>
         </div>
       )}
@@ -373,26 +382,22 @@ export function ScanResult({ result, crop, imageUrl, onReset }: ScanResultProps)
       {/* Trust / advisory boundary */}
       <div className="flex items-start gap-3 rounded-control border border-line bg-sunken/60 p-4 text-sm text-muted">
         <Info size={18} className="mt-0.5 shrink-0 text-primary" aria-hidden />
-        <p className="leading-relaxed">
-          This result was generated by an AI model from the photo you uploaded, for general crop
-          care. Soil, weather, and local conditions differ — treat it as a starting point and
-          confirm any treatment with your local agricultural extension officer.
-        </p>
+        <p className="leading-relaxed">{t('result.trust')}</p>
       </div>
 
       {/* Actions — only existing functionality */}
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
         <Button size="lg" onClick={onReset} className="w-full sm:w-auto">
           <Camera size={17} aria-hidden />
-          Scan another crop
+          {t('result.scanAnother')}
         </Button>
         <Button variant="secondary" size="lg" to="/health" className="w-full sm:w-auto">
           <Sprout size={17} aria-hidden />
-          View crop health
+          {t('result.viewHealth')}
         </Button>
         <Button variant="ghost" size="lg" to="/" className="w-full sm:w-auto sm:ml-auto">
           <ArrowLeft size={17} aria-hidden />
-          Back to home
+          {t('result.backHome')}
         </Button>
       </div>
     </div>

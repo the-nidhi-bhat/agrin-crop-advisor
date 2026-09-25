@@ -5,60 +5,42 @@ import { Card } from '../components/ui/Card';
 import { EmptyState } from '../components/ui/EmptyState';
 import { SectionHeader } from '../components/ui/SectionHeader';
 import { CROPS } from '../lib/crops';
+import { useT, type StringKey } from '../lib/strings';
 
-const loop: { icon: LucideIcon; title: string; copy: string }[] = [
-  {
-    icon: ScanLine,
-    title: 'Scan',
-    copy: 'Photograph a leaf. AgriN reads the crop image server-side for a plain-language read on what is happening.',
-  },
-  {
-    icon: Eye,
-    title: 'Understand',
-    copy: 'Get the likely condition and a clear confidence level — no jargon, no guesswork presented as fact.',
-  },
-  {
-    icon: ListChecks,
-    title: 'Act',
-    copy: 'Step-by-step immediate advisory in the language you choose, ready to act on with local resources.',
-  },
-  {
-    icon: TrendingUp,
-    title: 'Monitor',
-    copy: 'Crop Health will group your scans over time so you can see how a crop is tracking.',
-  },
+const loop: { icon: LucideIcon; titleKey: StringKey; copyKey: StringKey }[] = [
+  { icon: ScanLine, titleKey: 'home.loopScanTitle', copyKey: 'home.loopScanCopy' },
+  { icon: Eye, titleKey: 'home.loopUnderstandTitle', copyKey: 'home.loopUnderstandCopy' },
+  { icon: ListChecks, titleKey: 'home.loopActTitle', copyKey: 'home.loopActCopy' },
+  { icon: TrendingUp, titleKey: 'home.loopMonitorTitle', copyKey: 'home.loopMonitorCopy' },
 ];
 
 const supported = CROPS.map((crop) => crop.name);
 
 export function HomePage() {
+  const t = useT();
+
   return (
     <div className="space-y-12 md:space-y-16">
       {/* Hero */}
       <section className="pt-4 md:pt-8">
         <p className="text-xs font-bold uppercase tracking-[0.12em] text-primary">
-          Crop health companion
+          {t('home.heroEyebrow')}
         </p>
         <h1 className="mt-3 max-w-2xl text-4xl font-extrabold leading-[1.08] tracking-tight text-ink md:text-5xl">
-          Understand what is happening to your crop.
+          {t('home.heroTitle')}
         </h1>
-        <p className="mt-4 max-w-xl text-lg leading-relaxed text-muted">
-          AgriN helps you check the health of common Indian crops — tomato, chili, paddy, cotton,
-          soybean, wheat, maize, groundnut, sugarcane, and onion. Scan a leaf, get a clear
-          diagnosis, and know exactly what to do next — in plain language, in the language you
-          choose.
-        </p>
+        <p className="mt-4 max-w-xl text-lg leading-relaxed text-muted">{t('home.heroCopy')}</p>
         <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
           <Button to="/scan" size="lg" className="w-full sm:w-auto">
-            Scan your crop
+            {t('home.scanButton')}
             <ArrowRight size={18} aria-hidden />
           </Button>
           <Button to="/health" variant="secondary" size="lg" className="w-full sm:w-auto">
-            View crop health
+            {t('home.viewHealth')}
           </Button>
         </div>
         <div className="mt-6">
-          <p className="text-sm text-muted">Supported crops</p>
+          <p className="text-sm text-muted">{t('home.supportedCrops')}</p>
           <ul className="mt-2 flex flex-wrap gap-2">
             {supported.map((crop) => (
               <li
@@ -75,21 +57,21 @@ export function HomePage() {
       {/* Product loop */}
       <section>
         <SectionHeader
-          eyebrow="How it works"
-          title="Scan, understand, act, monitor"
-          description="One crop at a time — a calm, practical loop, not a flood of AI widgets."
+          eyebrow={t('home.howEyebrow')}
+          title={t('home.howTitle')}
+          description={t('home.howDescription')}
         />
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {loop.map((step, i) => (
-            <Card key={step.title} className="flex flex-col gap-3">
+            <Card key={step.titleKey} className="flex flex-col gap-3">
               <div className="flex items-center gap-2 text-primary">
                 <step.icon size={20} aria-hidden />
                 <span className="text-xs font-bold uppercase tracking-[0.1em]">
                   {String(i + 1).padStart(2, '0')}
                 </span>
               </div>
-              <h3 className="text-lg font-bold text-ink">{step.title}</h3>
-              <p className="text-sm leading-relaxed text-muted">{step.copy}</p>
+              <h3 className="text-lg font-bold text-ink">{t(step.titleKey)}</h3>
+              <p className="text-sm leading-relaxed text-muted">{t(step.copyKey)}</p>
             </Card>
           ))}
         </div>
@@ -99,23 +81,23 @@ export function HomePage() {
       <section>
         <div className="md:flex md:items-end md:justify-between">
           <SectionHeader
-            eyebrow="Progress"
-            title="Your crop history"
-            description="Every scan you make appears here, grouped by crop."
+            eyebrow={t('home.progressEyebrow')}
+            title={t('home.progressTitle')}
+            description={t('home.progressDescription')}
           />
           <Link
             to="/health"
             className="mt-2 inline-flex items-center gap-1 self-start text-sm font-semibold text-primary hover:underline md:mt-0"
           >
-            Open crop health <ArrowRight size={15} aria-hidden />
+            {t('home.openHealth')} <ArrowRight size={15} aria-hidden />
           </Link>
         </div>
         <div className="mt-6">
           <EmptyState
             icon={ScanLine}
-            title="No crop history yet"
-            description="Your first scan will appear here. Start by scanning a leaf to build up a picture of your crop's health."
-            action={<Button to="/scan">Scan your first crop</Button>}
+            title={t('home.emptyTitle')}
+            description={t('home.emptyDescription')}
+            action={<Button to="/scan">{t('home.emptyAction')}</Button>}
           />
         </div>
       </section>

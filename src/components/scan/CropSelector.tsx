@@ -1,6 +1,7 @@
 import { Check } from 'lucide-react';
 import { useRef, type KeyboardEvent } from 'react';
 import { CROPS } from '../../lib/crops';
+import { useT, type StringKey } from '../../lib/strings';
 
 interface CropSelectorProps {
   value: string;
@@ -8,6 +9,7 @@ interface CropSelectorProps {
 }
 
 export function CropSelector({ value, onChange }: CropSelectorProps) {
+  const t = useT();
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
 
   const moveFocus = (from: number, diff: number) => {
@@ -39,7 +41,11 @@ export function CropSelector({ value, onChange }: CropSelectorProps) {
   };
 
   return (
-    <div role="radiogroup" aria-label="Crop" className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+    <div
+      role="radiogroup"
+      aria-label={t('scan.cropGroup')}
+      className="grid grid-cols-2 gap-2 sm:grid-cols-3"
+    >
       {CROPS.map((crop, index) => {
         const selected = value === crop.name;
         return (
@@ -73,7 +79,7 @@ export function CropSelector({ value, onChange }: CropSelectorProps) {
                 selected ? 'text-primary-soft' : 'text-muted'
               }`}
             >
-              {crop.tip}
+              {t(`cropTip.${crop.id}` as StringKey)}
             </span>
           </button>
         );

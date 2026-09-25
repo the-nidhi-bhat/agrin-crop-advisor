@@ -1,6 +1,7 @@
 import { Clock3, ScanLine } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Card } from './ui/Card';
+import { useT, type StringKey } from '../lib/strings';
 
 interface StagedLoaderProps {
   crop: string;
@@ -10,14 +11,15 @@ interface StagedLoaderProps {
   onTryAgain: () => void;
 }
 
-const steps = [
-  'Preparing your scan',
-  'Examining the crop',
-  'Preparing your guidance',
-  'Finalizing your guidance',
+const steps: StringKey[] = [
+  'loader.step1',
+  'loader.step2',
+  'loader.step3',
+  'loader.step4',
 ];
 
 export function StagedLoader({ crop, preview, currentStep, isSlow, onTryAgain }: StagedLoaderProps) {
+  const t = useT();
   return (
     <div className="mx-auto w-full max-w-2xl">
       <Card className="space-y-6">
@@ -26,11 +28,8 @@ export function StagedLoader({ crop, preview, currentStep, isSlow, onTryAgain }:
             <ScanLine size={22} aria-hidden />
           </span>
           <div className="min-w-0">
-            <h2 className="text-xl font-bold text-ink">Analyzing your {crop}</h2>
-            <p className="mt-1 text-sm text-muted">
-              Your photo is processed privately server-side. This can take up to a minute, and high
-              demand can slow it down.
-            </p>
+            <h2 className="text-xl font-bold text-ink">{t('loader.analyzing', { crop })}</h2>
+            <p className="mt-1 text-sm text-muted">{t('loader.copy')}</p>
           </div>
         </div>
 
@@ -38,7 +37,7 @@ export function StagedLoader({ crop, preview, currentStep, isSlow, onTryAgain }:
           <div className="relative aspect-[4/3] overflow-hidden rounded-card border border-line bg-sunken">
             <img
               src={preview}
-              alt={`Photo of the ${crop} leaf being analyzed`}
+              alt={t('loader.photoAlt', { crop })}
               className="absolute inset-0 h-full w-full object-cover"
             />
             <span
@@ -50,7 +49,7 @@ export function StagedLoader({ crop, preview, currentStep, isSlow, onTryAgain }:
             </span>
           </div>
 
-          <ol className="space-y-2.5" aria-label="Scan progress" aria-live="polite">
+          <ol className="space-y-2.5" aria-label={t('loader.progress')} aria-live="polite">
             {steps.map((label, index) => {
               const isActive = index === currentStep;
               const isDone = index < currentStep;
@@ -76,7 +75,7 @@ export function StagedLoader({ crop, preview, currentStep, isSlow, onTryAgain }:
                       isActive ? 'text-ink' : 'text-muted'
                     }`}
                   >
-                    {label}
+                    {t(label)}
                   </span>
                   {isActive && (
                     <span
@@ -97,11 +96,10 @@ export function StagedLoader({ crop, preview, currentStep, isSlow, onTryAgain }:
           >
             <p className="flex items-start gap-2.5 text-sm leading-relaxed text-[#6b4f10]">
               <Clock3 size={18} className="mt-0.5 shrink-0" aria-hidden />
-              This is taking longer than expected — the AI is under high demand. You can keep
-              waiting or try again with the same photo.
+              {t('loader.slow')}
             </p>
             <Button variant="secondary" size="md" onClick={onTryAgain} className="shrink-0">
-              Try again
+              {t('common.tryAgain')}
             </Button>
           </div>
         )}

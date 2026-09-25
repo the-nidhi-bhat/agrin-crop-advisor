@@ -5,6 +5,7 @@ import { Button } from '../components/ui/Button';
 import { Field, controlClass } from '../components/ui/Field';
 import { Brand } from '../components/layout/Brand';
 import { useAuth } from '../hooks/useAuth';
+import { useT, type StringKey } from '../lib/strings';
 
 export type AuthMode = 'signin' | 'signup' | 'forgot';
 
@@ -17,6 +18,8 @@ function PasswordField({
   onChange,
   error,
   autoComplete,
+  showLabel,
+  hideLabel,
 }: {
   id: string;
   label: string;
@@ -24,6 +27,8 @@ function PasswordField({
   onChange: (value: string) => void;
   error?: string;
   autoComplete?: string;
+  showLabel: string;
+  hideLabel: string;
 }) {
   const [visible, setVisible] = useState(false);
   return (
@@ -40,7 +45,7 @@ function PasswordField({
         <button
           type="button"
           onClick={() => setVisible((v) => !v)}
-          aria-label={visible ? 'Hide password' : 'Show password'}
+          aria-label={visible ? hideLabel : showLabel}
           className="absolute inset-y-0 right-2 flex w-10 items-center justify-center text-muted hover:text-ink"
         >
           {visible ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -50,10 +55,18 @@ function PasswordField({
   );
 }
 
+const leftSteps: { titleKey: StringKey; copyKey: StringKey }[] = [
+  { titleKey: 'auth.leftScanTitle', copyKey: 'auth.leftScanCopy' },
+  { titleKey: 'auth.leftUnderstandTitle', copyKey: 'auth.leftUnderstandCopy' },
+  { titleKey: 'auth.leftActTitle', copyKey: 'auth.leftActCopy' },
+  { titleKey: 'auth.leftMonitorTitle', copyKey: 'auth.leftMonitorCopy' },
+];
+
 export function AuthPage({ mode }: { mode: AuthMode }) {
   const navigate = useNavigate();
   const { user, pendingRecovery, signIn, signUp, signOut, requestPasswordReset, updatePassword } =
     useAuth();
+  const t = useT();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -75,12 +88,12 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
     const trimmedEmail = email.trim();
 
     if (mode === 'signup' || isRecovery) {
-      if (password.length < 8) errors.password = 'Use at least 8 characters.';
-      if (confirm !== password) errors.confirm = 'Passwords do not match.';
+      if (password.length < 8) errors.password = t('auth.errShortPassword');
+      if (confirm !== password) errors.confirm = t('auth.errMismatch');
     }
     if (!isRecovery && (mode === 'forgot' || mode === 'signin' || mode === 'signup')) {
-      if (!trimmedEmail) errors.email = 'Enter your email address.';
-      else if (!EMAIL_RE.test(trimmedEmail)) errors.email = 'That doesn\u2019t look like a valid email address.';
+      if (!trimmedEmail) errors.email = t('auth.errEmailEmpty');
+      else if (!EMAIL_RE.test(trimmedEmail)) errors.email = t('auth.errEmailInvalid');
     }
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
@@ -94,7 +107,7 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
         if (result.error) {
           setFormError(result.error);
         } else {
-          setNotice('Your password has been updated. Sign in with your new password.');
+          setNotice(t('auth.passwordUpdated'));
           navigate('/');
         }
         return;
@@ -121,9 +134,7 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
       if (result.error) {
         setFormError(result.error);
       } else {
-        setNotice(
-          'If an account exists for that email, a reset link is on its way. Check your inbox to set a new password.',
-        );
+        setNotice(t('auth.forgotSent'));
       }
     } finally {
       setSubmitting(false);
@@ -131,7 +142,13 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
   }
 
   const title =
-    mode === 'signup' ? 'Create your account' : isRecovery ? 'Choose a new password' : mode === 'forgot' ? 'Reset your password' : 'Welcome back';
+    mode === 'signup'
+      ? t('auth.createTitle')
+      : isRecovery
+        ? t('auth.recoveryTitle')
+        : mode === 'forgot'
+          ? t('auth.forgotTitle')
+          : t('auth.welcomeTitle');
 
   return (
     <div className="grid min-h-dvh lg:grid-cols-[1fr_1.05fr]">
@@ -141,28 +158,18 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
             <img src="/favicon.svg" alt="" aria-hidden className="h-9 w-9 rounded-[9px] bg-white/95 p-1" />
             <span className="text-2xl font-extrabold tracking-tight">AgriN</span>
             <span className="rounded-full bg-white/15 px-2.5 py-0.5 text-xs font-bold text-white/90">
-              Beta
+            {t('common.beta')}
             </span>
           </div>
-          <h2 className="mt-10 text-3xl font-bold leading-tight">
-            Someone you can ask about your crop.
-          </h2>
-          <p className="mt-4 text-base leading-relaxed text-white/80">
-            Scan a leaf, get a clear diagnosis, and know exactly what to do next — in plain words,
-            in the language you choose.
-          </p>
+          <h2 className="mt-10 text-3xl font-bold leading-tight">{t('auth.leftTitle')}</h2>
+          <p className="mt-4 text-base leading-relaxed text-white/80">{t('auth.leftCopy')}</p>
           <ul className="mt-10 space-y-4 text-sm text-white/85">
-            {[
-              ['Scan', 'Photograph an affected leaf and let the AI take a look.'],
-              ['Understand', 'A plain-language read on the likely condition.'],
-              ['Act', 'Step-by-step guidance you can act on today.'],
-              ['Monitor', 'Your scan history, grouped by crop.'],
-            ].map(([step, copy]) => (
-              <li key={step} className="flex items-start gap-3">
+            {leftSteps.map((step) => (
+              <li key={step.titleKey} className="flex items-start gap-3">
                 <span className="mt-0.5 rounded-full bg-white/15 px-2.5 py-0.5 text-xs font-bold text-white/90">
-                  {step}
+                  {t(step.titleKey)}
                 </span>
-                <span className="leading-relaxed">{copy}</span>
+                <span className="leading-relaxed">{t(step.copyKey)}</span>
               </li>
             ))}
           </ul>
@@ -174,33 +181,33 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
           <div className="mb-8 flex items-center justify-between">
             <Brand />
             <span className="rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-bold text-accent-deep">
-              Beta
+            {t('common.beta')}
             </span>
           </div>
 
           <h1 className="text-2xl font-bold text-ink">{title}</h1>
           <p className="mt-1.5 text-sm leading-relaxed text-muted">
             {isRecovery
-              ? 'Pick a new password for your AgriN account.'
+              ? t('auth.subtitleRecovery')
               : mode === 'signup'
-                ? 'Signing up keeps your crop history private to your account.'
+                ? t('auth.subtitleSignup')
                 : mode === 'forgot'
-                  ? 'Enter your account email and we will send you a reset link.'
-                  : 'Sign in to scan your crops and check their health.'}
+                  ? t('auth.subtitleForgot')
+                  : t('auth.subtitleSignin')}
           </p>
 
           {user && !isRecovery ? (
             <div className="mt-8 rounded-card border border-line bg-surface p-6">
-              <p className="text-sm text-muted">You are signed in as</p>
-              <p className="mt-1 truncate font-semibold text-ink">{user.email ?? 'an anonymous user'}</p>
+              <p className="text-sm text-muted">{t('auth.signedInAs')}</p>
+              <p className="mt-1 truncate font-semibold text-ink">{user.email ?? t('auth.anonUser')}</p>
               <Button variant="secondary" className="mt-5 w-full" onClick={() => void signOut()}>
-                Sign out &amp; switch account
+                {t('auth.switchAccount')}
               </Button>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="mt-8 space-y-5" noValidate>
               {mode === 'signup' ? (
-                <Field label="Name (optional)" htmlFor="auth-name">
+                <Field label={t('auth.nameOptional')} htmlFor="auth-name">
                   <input
                     id="auth-name"
                     type="text"
@@ -213,7 +220,7 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
               ) : null}
 
               {!isRecovery && (mode === 'signin' || mode === 'signup' || mode === 'forgot') && (
-                <Field label="Email" htmlFor="auth-email" error={fieldErrors.email}>
+                <Field label={t('auth.email')} htmlFor="auth-email" error={fieldErrors.email}>
                   <input
                     id="auth-email"
                     type="email"
@@ -228,22 +235,26 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
               {(mode === 'signin' || mode === 'signup' || isRecovery) && (
                 <PasswordField
                   id="auth-password"
-                  label="Password"
+                  label={t('auth.password')}
                   value={password}
                   onChange={setPassword}
                   error={fieldErrors.password}
                   autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+                  showLabel={t('auth.showPassword')}
+                  hideLabel={t('auth.hidePassword')}
                 />
               )}
 
               {(mode === 'signup' || isRecovery) && (
                 <PasswordField
                   id="auth-confirm"
-                  label="Confirm password"
+                  label={t('auth.confirmPassword')}
                   value={confirm}
                   onChange={setConfirm}
                   error={fieldErrors.confirm}
                   autoComplete="new-password"
+                  showLabel={t('auth.showPassword')}
+                  hideLabel={t('auth.hidePassword')}
                 />
               )}
 
@@ -262,19 +273,19 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
                 {submitting ? <LoaderCircle size={18} className="animate-spin" aria-hidden /> : null}
                 {submitting
                   ? mode === 'signup'
-                    ? 'Creating account…'
+                    ? t('auth.submittingSignup')
                     : isRecovery
-                      ? 'Updating password…'
+                      ? t('auth.submittingRecovery')
                       : mode === 'forgot'
-                        ? 'Sending reset link…'
-                        : 'Signing in…'
+                        ? t('auth.submittingForgot')
+                        : t('auth.submittingSignin')
                   : mode === 'signup'
-                    ? 'Create account'
+                    ? t('auth.submitSignup')
                     : isRecovery
-                      ? 'Update password'
+                      ? t('auth.submitRecovery')
                       : mode === 'forgot'
-                        ? 'Send reset link'
-                        : 'Sign in'}
+                        ? t('auth.submitForgot')
+                        : t('auth.submitSignin')}
               </Button>
             </form>
           )}
@@ -283,29 +294,29 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
             <div className="mt-6 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-sm text-muted">
               {mode === 'signin' ? (
                 <>
-                  <span>New to AgriN?</span>
+                  <span>{t('auth.newToAgrin')}</span>
                   <Link to="/signup" className="font-semibold text-primary hover:text-primary-deep">
-                    Create an account
+                    {t('auth.createAccount')}
                   </Link>
                   <span aria-hidden className="mx-1 text-line">
                     ·
                   </span>
                   <Link to="/forgot" className="font-semibold text-primary hover:text-primary-deep">
-                    Forgot password?
+                    {t('auth.forgotPassword')}
                   </Link>
                 </>
               ) : mode === 'signup' ? (
                 <>
-                  <span>Already have an account?</span>
+                  <span>{t('auth.haveAccount')}</span>
                   <Link to="/signin" className="font-semibold text-primary hover:text-primary-deep">
-                    Sign in
+                    {t('auth.submitSignin')}
                   </Link>
                 </>
               ) : (
                 <>
-                  <span>Remembered it?</span>
+                  <span>{t('auth.remembered')}</span>
                   <Link to="/signin" className="font-semibold text-primary hover:text-primary-deep">
-                    Back to sign in
+                    {t('auth.backToSignIn')}
                   </Link>
                 </>
               )}

@@ -12,6 +12,7 @@ import { SectionHeader } from '../components/ui/SectionHeader';
 import { useAuth } from '../hooks/useAuth';
 import { CROPS } from '../lib/crops';
 import { supabase } from '../lib/supabase';
+import { useT } from '../lib/strings';
 
 type Phase = 'form' | 'analyzing' | 'result';
 
@@ -42,29 +43,30 @@ async function invoke<T>(path: string, body: Record<string, unknown>): Promise<T
   return data as T;
 }
 
-async function friendlyMessage(err: unknown): Promise<string> {
-  if (err instanceof FunctionsHttpError || err instanceof FunctionsRelayError) {
-    const context = await err.context.json().catch(() => ({}));
-    const body = context as { error?: { code?: string; message?: string } };
-    const code = body.error?.code;
-    const message = body.error?.message;
-    if (code === 'resource-exhausted') {
-      return message || 'You have reached the scan limit for this hour. Please try again later.';
-    }
-    if (code === 'unavailable') {
-      return 'AgriN could not complete the analysis right now. Please try again in a moment.';
-    }
-    if (message) return message;
-    return 'AgriN could not complete the analysis. Please try again.';
-  }
-  if (err instanceof FunctionsFetchError) {
-    return 'Could not reach the AgriN service. Check your connection and try again.';
-  }
-  return 'Something went wrong while scanning. Please try again.';
-}
-
 export function ScanPage() {
   const { user } = useAuth();
+  const t = useT();
+
+  async function friendlyMessage(err: unknown): Promise<string> {
+    if (err instanceof FunctionsHttpError || err instanceof FunctionsRelayError) {
+      const context = await err.context.json().catch(() => ({}));
+      const body = context as { error?: { code?: string; message?: string } };
+      const code = body.error?.code;
+      const message = body.error?.message;
+      if (code === 'resource-exhausted') {
+        return message || t('scan.errQuota');
+      }
+      if (code === 'unavailable') {
+        return t('scan.errUnavailable');
+      }
+      if (message) return message;
+      return t('scan.errGeneric');
+    }
+    if (err instanceof FunctionsFetchError) {
+      return t('scan.errNetwork');
+    }
+    return t('scan.errUnknown');
+  }
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [crop, setCrop] = useState(CROPS[0].name);
@@ -120,11 +122,11 @@ export function ScanPage() {
     e.preventDefault();
     if (submitting.current) return;
     if (!file || !preview) {
-      setError('Choose a leaf photo to scan.');
+      setError(t('scan.errNoPhoto'));
       return;
     }
     if (!user) {
-      setError('Your scan session is still connecting. Please reload and try again.');
+      setError(t('scan.errConnecting'));
       return;
     }
 
@@ -204,9 +206,9 @@ export function ScanPage() {
   return (
     <div className="space-y-8">
       <SectionHeader
-        eyebrow="Scan"
-        title="Scan your crop"
-        description="Choose the crop, add a clear photo of the affected leaf, and AgriN will read it for you."
+        eyebrow={t('scan.eyebrow')}
+        title={t('scan.title')}
+        description={t('scan.description')}
       />
 
       <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
@@ -214,45 +216,51 @@ export function ScanPage() {
           <Card className="space-y-6">
             <section aria-labelledby="step-crop">
               <h2 id="step-crop" className="mb-3 flex items-baseline gap-2 font-bold text-ink">
-                <span className="text-xs font-extrabold text-primary">01</span> Choose your crop
+                <span className="text-xs font-extrabold text-primary">01</span>{' '}
+                {t('scan.stepCrop')}
               </h2>
               <CropSelector value={crop} onChange={setCrop} />
             </section>
 
             <section aria-labelledby="step-photo">
               <h2 id="step-photo" className="mb-3 flex items-baseline gap-2 font-bold text-ink">
-                <span className="text-xs font-extrabold text-primary">02</span> Photograph the leaf
+                <span className="text-xs font-extrabold text-primary">02</span>{' '}
+                {t('scan.stepPhoto')}
               </h2>
               <UploadZone preview={preview} onChange={handleFileChange} onError={setError} />
             </section>
 
             <section aria-labelledby="step-details" className="space-y-4">
               <h2 id="step-details" className="flex items-baseline gap-2 font-bold text-ink">
-                <span className="text-xs font-extrabold text-primary">03</span> Your details
-                <span className="text-xs font-semibold text-muted">(optional)</span>
+                <span className="text-xs font-extrabold text-primary">03</span> {t('scan.stepDetails')}
+                <span className="text-xs font-semibold text-muted">{t('scan.optional')}</span>
               </h2>
-              <Field label="Location" htmlFor="scan-location" hint="e.g. Karnataka — helps tailor advice.">
+              <Field
+                label={t('scan.location')}
+                htmlFor="scan-location"
+                hint={t('scan.locationHint')}
+              >
                 <input
                   id="scan-location"
                   type="text"
                   autoComplete="address-level1"
-                  placeholder="e.g. Karnataka"
+                  placeholder={t('scan.locationPlaceholder')}
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   className={controlClass}
                 />
               </Field>
               <Field
-                label="Phone number"
+                label={t('scan.phone')}
                 htmlFor="scan-phone"
-                hint="Only used so the SMS version of the advisory has somewhere to go."
+                hint={t('scan.phoneHint')}
               >
                 <input
                   id="scan-phone"
                   type="tel"
                   autoComplete="tel"
                   inputMode="tel"
-                  placeholder="e.g. 98765 43210"
+                  placeholder={t('scan.phonePlaceholder')}
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   className={controlClass}
@@ -273,7 +281,7 @@ export function ScanPage() {
           <div className="sticky bottom-24 z-30 -mx-4 border-t border-line bg-surface/95 px-4 pb-4 pt-3 backdrop-blur lg:static lg:mx-0 lg:border-0 lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-0">
             {preview && (
               <p className="mb-2 truncate text-xs font-semibold text-muted">
-                Ready to scan{' '}
+                {t('scan.ready')}{' '}
                 <span className="rounded-full bg-primary-soft px-2 py-0.5 text-primary">{crop}</span>
                 <span aria-hidden> · </span>
                 {file?.name}
@@ -281,7 +289,7 @@ export function ScanPage() {
             )}
             <Button type="submit" size="lg" className="w-full" disabled={!file}>
               <ScanLine size={18} aria-hidden />
-              Scan crop
+              {t('scan.scanButton')}
             </Button>
           </div>
         </form>
@@ -291,43 +299,43 @@ export function ScanPage() {
           <Card className="bg-primary-soft/50">
             <h3 className="flex items-center gap-2 font-bold text-ink">
               <SunMedium size={17} className="text-primary" aria-hidden />
-              Taking a good photo
+              {t('scan.tipsTitle')}
             </h3>
             <ul className="mt-3 space-y-2 text-sm leading-relaxed text-ink/70">
-              <li>Use natural daylight — avoid harsh shadows.</li>
-              <li>Fill the frame with the affected leaf.</li>
-              <li>Hold the phone steady and close enough to see detail.</li>
-              <li>If possible, photograph the under-side too.</li>
+              <li>{t('scan.tip1')}</li>
+              <li>{t('scan.tip2')}</li>
+              <li>{t('scan.tip3')}</li>
+              <li>{t('scan.tip4')}</li>
             </ul>
           </Card>
 
           <Card>
             <h3 className="flex items-center gap-2 font-bold text-ink">
               <RefreshCw size={17} className="text-primary" aria-hidden />
-              What happens next
+              {t('scan.nextTitle')}
             </h3>
             <ul className="mt-3 space-y-2 text-sm leading-relaxed text-muted">
-              <li>Your photo is uploaded and analyzed server-side.</li>
-              <li>You get a plain-language read on the likely condition.</li>
-              <li>Immediate next steps in the language you choose.</li>
+              <li>{t('scan.next1')}</li>
+              <li>{t('scan.next2')}</li>
+              <li>{t('scan.next3')}</li>
             </ul>
           </Card>
 
           <Card>
             <h3 className="flex items-center gap-2 font-bold text-ink">
               <ImageIcon size={17} className="text-primary" aria-hidden />
-              A few things to know
+              {t('scan.knowTitle')}
             </h3>
             <ul className="mt-3 space-y-2 text-sm leading-relaxed text-muted">
-              <li>The AI model is never exposed to your browser — analysis runs server-side.</li>
-              <li>Photos stay private to your account and are not shared.</li>
-              <li>Results are advisory; confirm treatments with a local officer.</li>
+              <li>{t('scan.know1')}</li>
+              <li>{t('scan.know2')}</li>
+              <li>{t('scan.know3')}</li>
             </ul>
           </Card>
 
           <div className="flex items-start gap-2 rounded-control border border-line bg-sunken/60 p-3 text-xs text-muted">
             <ShieldCheck size={15} className="mt-0.5 shrink-0 text-primary" aria-hidden />
-            <p>Scan runs are rate-limited for everyone's safety.</p>
+            <p>{t('scan.rateLimited')}</p>
           </div>
         </aside>
       </div>
