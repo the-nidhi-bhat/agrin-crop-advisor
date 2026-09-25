@@ -8,7 +8,7 @@ interface BadgeProps {
 const tones = {
   soft: 'bg-primary-soft text-primary',
   neutral: 'bg-sunken text-muted',
-  warn: 'bg-accent-soft text-[#7a5a12]',
+  warn: 'bg-accent-soft text-accent-deep',
   danger: 'bg-danger-soft text-danger',
 } as const;
 

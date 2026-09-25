@@ -56,7 +56,7 @@ export function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
             onKeyDown={(e) => handleKeyDown(e, index)}
             className={`relative flex items-center gap-3 rounded-control border px-3 py-3 text-left transition-colors duration-150 ${
               selected
-                ? 'border-primary bg-primary text-white'
+                ? 'border-primary bg-primary text-on-primary'
                 : 'border-line bg-surface text-ink hover:bg-sunken'
             }`}
           >
@@ -65,7 +65,7 @@ export function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
             )}
             <span
               className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-control text-xs ${
-                selected ? 'bg-white/15 text-white' : 'bg-sunken-deep text-ink'
+                selected ? 'bg-on-primary/15 text-on-primary' : 'bg-sunken-deep text-ink'
               }`}
             >
               {language.nativeName.slice(0, 2)}

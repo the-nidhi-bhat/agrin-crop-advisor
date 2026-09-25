@@ -62,7 +62,7 @@ export function CropSelector({ value, onChange }: CropSelectorProps) {
             onKeyDown={(e) => handleKeyDown(e, index)}
             className={`relative flex flex-col justify-center gap-0.5 rounded-control border px-3 py-3 text-left transition-colors duration-150 ${
               selected
-                ? 'border-primary bg-primary text-white'
+                ? 'border-primary bg-primary text-on-primary'
                 : 'border-line bg-surface text-ink hover:bg-sunken'
             }`}
           >

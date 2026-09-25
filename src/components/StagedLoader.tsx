@@ -38,7 +38,7 @@ export function StagedLoader({ crop, preview, currentStep, isSlow, onTryAgain }:
             <img
               src={preview}
               alt={t('loader.photoAlt', { crop })}
-              className="absolute inset-0 h-full w-full object-cover"
+              className="themed-photo absolute inset-0 h-full w-full object-cover"
             />
             <span
               className="agrin-scanline absolute inset-x-0 h-[2px] bg-primary/80"
@@ -64,7 +64,7 @@ export function StagedLoader({ crop, preview, currentStep, isSlow, onTryAgain }:
                   <span
                     className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors duration-300 ${
                       isDone || isActive
-                        ? 'bg-primary text-white'
+                        ? 'bg-primary text-on-primary'
                         : 'bg-sunken text-muted'
                     }`}
                   >

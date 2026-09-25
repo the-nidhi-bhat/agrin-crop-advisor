@@ -194,7 +194,7 @@ export function ScanResult({ result, crop, imageUrl, onReset }: ScanResultProps)
             <img
               src={imageUrl}
               alt={t('result.photoAlt', { crop })}
-              className="h-24 w-24 shrink-0 rounded-card border border-line object-cover"
+              className="themed-photo h-24 w-24 shrink-0 rounded-card border border-line object-cover"
             />
           )}
           <div className="min-w-0 flex-1 space-y-2.5">

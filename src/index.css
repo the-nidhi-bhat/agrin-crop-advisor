@@ -1,39 +1,103 @@
 @import "tailwindcss";
 
-@theme {
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  color-scheme: light;
+
+  /* Warm agricultural editorial palette */
+  --agrin-canvas: #f7f5ef;
+  --agrin-surface: #ffffff;
+  --agrin-sunken: #efede4;
+  --agrin-sunken-deep: #e6e3d6;
+  --agrin-line: #e2dfd3;
+
+  --agrin-ink: #1b2a21;
+  --agrin-muted: #5b6b60;
+
+  --agrin-primary: #1f5f3f;
+  --agrin-primary-deep: #174a31;
+  --agrin-primary-soft: #e3efe7;
+  --agrin-on-primary: #ffffff;
+
+  --agrin-accent: #e3a72f;
+  --agrin-accent-deep: #c98f1d;
+  --agrin-accent-soft: #faf0dc;
+
+  --agrin-danger: #9b2c2c;
+  --agrin-danger-soft: #f8e9e6;
+
+  --agrin-shade: rgba(27, 42, 33, 0.6);
+  --agrin-shadow-key: rgba(27, 42, 33, 0.05);
+  --agrin-shadow-raise: rgba(27, 42, 33, 0.18);
+  --agrin-img-filter: none;
+}
+
+.dark {
+  color-scheme: dark;
+
+  --agrin-canvas: #0d120e;
+  --agrin-surface: #141a15;
+  --agrin-sunken: #1a2119;
+  --agrin-sunken-deep: #222b21;
+  --agrin-line: #273127;
+
+  --agrin-ink: #e9efe9;
+  --agrin-muted: #9fb0a2;
+
+  --agrin-primary: #7fc99e;
+  --agrin-primary-deep: #3f9a68;
+  --agrin-primary-soft: #1a3526;
+  --agrin-on-primary: #0c120d;
+
+  --agrin-accent: #dcae45;
+  --agrin-accent-deep: #e0b65a;
+  --agrin-accent-soft: #3a2f14;
+
+  --agrin-danger: #e58181;
+  --agrin-danger-soft: #3b2220;
+
+  --agrin-shade: rgba(5, 8, 6, 0.72);
+  --agrin-shadow-key: rgba(0, 0, 0, 0.2);
+  --agrin-shadow-raise: rgba(0, 0, 0, 0.45);
+  --agrin-img-filter: brightness(0.88) saturate(1.05);
+}
+
+@theme inline {
   /* Typography */
   --font-sans: "Manrope", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-kn: "Noto Sans Kannada", "Manrope", ui-sans-serif, system-ui, sans-serif;
 
-  /* Warm agricultural editorial palette */
-  --color-canvas: #f7f5ef;
-  --color-surface: #ffffff;
-  --color-sunken: #efede4;
-  --color-line: #e2dfd3;
+  /* Color tokens map to runtime vars so .dark swaps in-place */
+  --color-canvas: var(--agrin-canvas);
+  --color-surface: var(--agrin-surface);
+  --color-sunken: var(--agrin-sunken);
+  --color-line: var(--agrin-line);
 
-  --color-ink: #1b2a21;
-  --color-muted: #5b6b60;
+  --color-ink: var(--agrin-ink);
+  --color-muted: var(--agrin-muted);
 
-  --color-primary: #1f5f3f;
-  --color-primary-deep: #174a31;
-  --color-primary-soft: #e3efe7;
+  --color-primary: var(--agrin-primary);
+  --color-primary-deep: var(--agrin-primary-deep);
+  --color-primary-soft: var(--agrin-primary-soft);
+  --color-on-primary: var(--agrin-on-primary);
 
-  --color-accent: #e3a72f;
-  --color-accent-deep: #c98f1d;
-  --color-accent-soft: #faf0dc;
+  --color-accent: var(--agrin-accent);
+  --color-accent-deep: var(--agrin-accent-deep);
+  --color-accent-soft: var(--agrin-accent-soft);
 
   /* Semantic */
-  --color-danger: #9b2c2c;
-  --color-danger-soft: #f8e9e6;
-  --color-sunken-deep: #e6e3d6;
+  --color-danger: var(--agrin-danger);
+  --color-danger-soft: var(--agrin-danger-soft);
+  --color-sunken-deep: var(--agrin-sunken-deep);
 
   /* Radii */
   --radius-card: 16px;
   --radius-control: 12px;
 
   /* Shadows — restrained */
-  --shadow-card: 0 1px 2px rgb(27 42 33 / 0.05);
-  --shadow-raise: 0 8px 24px -12px rgb(27 42 33 / 0.18);
+  --shadow-card: 0 1px 2px var(--agrin-shadow-key);
+  --shadow-raise: 0 8px 24px -12px var(--agrin-shadow-raise);
 }
 
 @layer base {
@@ -47,6 +111,11 @@
 
   ::selection {
     background-color: var(--color-primary-soft);
+  }
+
+  /* Photos (photos on photo pages and the hero) keep their warmth in dark mode */
+  .themed-photo {
+    filter: var(--agrin-img-filter);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -89,4 +158,32 @@
 
 .agrin-scanline {
   animation: agrin-scan-sweep 3.4s ease-in-out infinite;
+}
+
+/* Hero rotator: slow cinematic push-in while a slide is visible. */
+@keyframes agrin-kenburns {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.06);
+  }
+}
+
+.agrin-kenburns {
+  animation: agrin-kenburns 8s ease-out forwards;
+}
+
+/* Landing: soft fade-up on section reveal (disabled below in reduced-motion). */
+.agrin-reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 0.6s ease,
+    transform 0.6s ease;
+}
+
+.agrin-revealed {
+  opacity: 1;
+  transform: none;
 }

@@ -45,7 +45,7 @@ function ScanRow({ scan, thumb, t }: ScanRowProps) {
             date: formatDate(scan.created_at),
           })}
           loading="lazy"
-          className="h-14 w-14 shrink-0 rounded-card border border-line bg-sunken object-cover"
+          className="themed-photo h-14 w-14 shrink-0 rounded-card border border-line bg-sunken object-cover"
         />
       ) : (
         <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-card border border-line bg-sunken text-muted">
@@ -149,7 +149,7 @@ export function HealthPage() {
                           crop: latest.crop,
                           date: formatDate(latest.created_at),
                         })}
-                        className="h-28 w-28 shrink-0 rounded-card border border-line bg-sunken object-cover"
+                        className="themed-photo h-28 w-28 shrink-0 rounded-card border border-line bg-sunken object-cover"
                       />
                     )}
                     <div className="min-w-0 flex-1">

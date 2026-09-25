@@ -51,7 +51,7 @@ export function UploadZone({ preview, onChange, onError, label }: UploadZoneProp
             <img
               src={preview}
               alt={t('upload.previewAlt')}
-              className="absolute inset-0 h-full w-full object-cover"
+              className="themed-photo absolute inset-0 h-full w-full object-cover"
             />
             <span className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-surface/95 px-3 py-1.5 text-xs font-semibold text-ink shadow-raise">
               <ImagePlus size={14} aria-hidden />

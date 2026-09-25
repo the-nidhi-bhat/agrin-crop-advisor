@@ -1,4 +1,4 @@
-import { Home, ScanLine, Settings, Sprout, type LucideIcon } from 'lucide-react';
+import { ScanLine, Settings, Sprout, type LucideIcon } from 'lucide-react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { Brand } from './Brand';
 import { useT, type StringKey } from '../../lib/strings';
@@ -7,11 +7,9 @@ interface NavItem {
   to: string;
   labelKey: StringKey;
   icon: LucideIcon;
-  end?: boolean;
 }
 
 const navItems: NavItem[] = [
-  { to: '/', labelKey: 'nav.home', icon: Home, end: true },
   { to: '/scan', labelKey: 'nav.scan', icon: ScanLine },
   { to: '/health', labelKey: 'nav.health', icon: Sprout },
   { to: '/settings', labelKey: 'nav.settings', icon: Settings },
@@ -38,7 +36,7 @@ export function AppLayout() {
 
           <nav aria-label={t('layout.navMain')} className="mt-8 space-y-1">
             {navItems.map((item) => (
-              <NavLink key={item.to} to={item.to} end={item.end} className={({ isActive }) => railClassName(isActive)}>
+              <NavLink key={item.to} to={item.to} className={({ isActive }) => railClassName(isActive)}>
                 <item.icon size={20} aria-hidden />
                 {t(item.labelKey)}
               </NavLink>
@@ -74,14 +72,14 @@ export function AppLayout() {
       {/* Mobile bottom nav */}
       <nav
         aria-label={t('layout.navMain')}
-        className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-3 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
       >
         {navItems.map((item) => (
-          <NavLink key={item.to} to={item.to} end={item.end} className="flex flex-col items-center gap-0.5 pt-2 pb-1.5">
+          <NavLink key={item.to} to={item.to} className="flex flex-col items-center gap-0.5 pt-2 pb-1.5">
             {({ isActive }) => (
               <>
                 {item.to === '/scan' ? (
-                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-white shadow-raise">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-on-primary shadow-raise">
                     <item.icon size={20} aria-hidden />
                   </span>
                 ) : (
