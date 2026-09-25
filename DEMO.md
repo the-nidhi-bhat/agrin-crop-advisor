@@ -28,9 +28,14 @@ alongside the recorded demo video (add the final YouTube link to the README).
     language you choose (e.g. **ಕನ್ನಡ**, हिन्दी, తెలుగు), and press **Play audio** to hear
     the guidance read aloud when that device voice is installed.
 11. **Open Crop Health.** The scan is saved to this account's private history.
-12. **Show the saved history.** The diagnosis card, confidence, advisory, and note that
-    SMS delivery is currently simulated.
-13. *(if time permits)* **Refresh the page** — the session and history persist.
+12. **Show the saved history.** The crop timeline shows each scan with its health dot,
+    and with two or more scans the honest **Earlier / Latest** comparison appears — side by
+    side, with no invented trend claims. SMS is clearly marked as simulated.
+13. **Switch to the farmer view (best saved for a second scan).** In **Settings → Guidance
+    view**, toggle **Simple**. The next result renders the same data as plain-language
+    cards — *What AgriN found*, *What you may notice*, *Do now*, *Keep watching* — with
+    big action buttons. Toggle back to **Detailed** to show both sides of the product.
+14. *(if time permits)* **Refresh the page** — the session and history persist.
 
 ## If Gemini quota is unavailable on demo day
 

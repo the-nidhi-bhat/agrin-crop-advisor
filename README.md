@@ -70,7 +70,16 @@ When a matching voice is installed on the device, guidance can be read aloud wit
 
 ### Crop Health
 
-Saved scans are grouped by crop so a farmer can track how each crop is doing over time. Only real scan rows are shown — nothing is fabricated.
+Saved scans are grouped by crop along a per-crop timeline, so a farmer can track how
+each crop is doing over time. With two or more scans, an honest **Earlier / Latest**
+comparison appears side by side. Only real scan rows are shown — nothing is fabricated.
+
+### Farmer-friendly reading
+
+Every result can be shown in **Simple view** — the same honest data in short sentences,
+plain words, and big actions: *What AgriN found*, *What you may notice*, *Do now*, and
+*Keep watching*. First-time visitors and judges can flip between Detailed and Simple
+from Settings with one click.
 
 ### Private by design
 
