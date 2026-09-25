@@ -1,9 +1,33 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import { ScanResult, type ScanResultData } from './ScanResult';
+import { translateAdvisory } from '../../lib/translate';
 
+vi.mock('../../lib/translate', () => ({
+  translateAdvisory: vi.fn(),
+}));
+
+const mockTranslate = vi.mocked(translateAdvisory);
 const KANNADA_TEXT = 'ಅನುಭವಿಸಿದ ಎಲೆಗಳನ್ನು ತೆಗೆದುಹಾಕಿ.';
+const HINDI_TEXT = 'संक्रमित पत्तियों को हटा दें।';
+
+type SpeechStub = {
+  latest: {
+    text: string;
+    voice: { lang: string } | null;
+    onstart: (() => void) | null;
+    onend: (() => void) | null;
+    onerror: (() => void) | null;
+  } | null;
+  speak: ReturnType<typeof vi.fn>;
+  cancel: ReturnType<typeof vi.fn>;
+  getVoices: ReturnType<typeof vi.fn>;
+};
+
+function speechStub(): SpeechStub {
+  return globalThis.speechSynthesis as unknown as SpeechStub;
+}
 
 function makeResult(overrides: Partial<ScanResultData> = {}): ScanResultData {
   return {
@@ -179,79 +203,143 @@ describe('ScanResult — advisory honesty', () => {
 describe('ScanResult — guidance language and audio', () => {
   beforeEach(() => {
     window.localStorage.clear();
+    mockTranslate.mockReset();
+    speechStub().getVoices.mockReset().mockImplementation(() => []);
   });
 
-  it('shows English guidance by default with a language switch', () => {
+  const languageSelect = () => screen.getByRole('combobox', { name: 'Guidance language' });
+
+  const setVoices = (langs: string[]) => {
+    speechStub().getVoices.mockReturnValue(langs.map((lang) => ({ lang })));
+  };
+
+  it('shows English guidance by default with all nine languages to choose from', () => {
     renderResult();
-    expect(screen.getByRole('heading', { level: 3, name: 'Language guidance' })).toBeInTheDocument();
+    const select = languageSelect() as HTMLSelectElement;
+    expect(select.value).toBe('en');
+    expect(screen.getAllByRole('option')).toHaveLength(9);
+    expect(screen.getByRole('option', { name: 'हिन्दी · Hindi' })).toBeInTheDocument();
     expect(screen.getByText('English guidance')).toBeInTheDocument();
     expect(screen.getAllByText(makeResult().advisory).length).toBeGreaterThan(0);
-    expect(screen.getByRole('radio', { name: 'English' })).toHaveAttribute('aria-checked', 'true');
-    expect(screen.getByRole('radio', { name: 'ಕನ್ನಡ' })).toHaveAttribute('aria-checked', 'false');
     expect(screen.getByRole('button', { name: 'Play English audio' })).toBeInTheDocument();
+    expect(mockTranslate).not.toHaveBeenCalled();
   });
 
-  it('switches to Kannada guidance with lang="kn" when chosen', () => {
+  it('switches to the cached Kannada translation when chosen', () => {
     renderResult();
-    fireEvent.click(screen.getByRole('radio', { name: 'ಕನ್ನಡ' }));
+    fireEvent.change(languageSelect(), { target: { value: 'kn' } });
     expect(screen.getByText('Kannada guidance')).toBeInTheDocument();
-    const kannada = screen.getByText(KANNADA_TEXT);
+    const kannada = screen.getAllByText(KANNADA_TEXT)[0];
     expect(kannada).toHaveAttribute('lang', 'kn');
-    expect(screen.getByRole('radio', { name: 'ಕನ್ನಡ' })).toHaveAttribute('aria-checked', 'true');
-    expect(screen.getByRole('button', { name: 'Play Kannada audio' })).toBeInTheDocument();
+    expect((languageSelect() as HTMLSelectElement).value).toBe('kn');
+    expect(mockTranslate).not.toHaveBeenCalled();
   });
 
-  it('persists a stored Kannada preference as the default view', () => {
+  it('applies a stored Kannada preference as the default view', () => {
     window.localStorage.setItem('agrin_language', 'kn');
     renderResult();
-    expect(screen.getByText(KANNADA_TEXT)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Play Kannada audio' })).toBeInTheDocument();
+    expect(screen.getAllByText(KANNADA_TEXT)[0]).toHaveAttribute('lang', 'kn');
+    expect((languageSelect() as HTMLSelectElement).value).toBe('kn');
   });
 
-  it('hides the Kannada option when the backend returns no translation', () => {
-    renderResult({ result: makeResult({ translatedAdvisory: '' }) });
-    expect(screen.queryByRole('radio', { name: 'ಕನ್ನಡ' })).toBeNull();
-    expect(screen.getByRole('radio', { name: 'English' })).toHaveAttribute('aria-checked', 'true');
-    expect(screen.getByRole('button', { name: 'Play English audio' })).toBeInTheDocument();
-  });
-
-  it('speaks the Kannada text via speechSynthesis when Kannada is selected', () => {
+  it('loads guidance in a stored language that has no cached translation', async () => {
+    window.localStorage.setItem('agrin_language', 'hi');
+    mockTranslate.mockResolvedValue({ language: 'hi', translatedText: HINDI_TEXT });
     renderResult();
-    fireEvent.click(screen.getByRole('radio', { name: 'ಕನ್ನಡ' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Play Kannada audio' }));
-    const speech = globalThis.speechSynthesis as unknown as { latest: { text: string } };
-    expect(speech.latest?.text).toBe(KANNADA_TEXT);
-    expect(screen.getByRole('button', { name: 'Stop Kannada audio' })).toBeInTheDocument();
+    const hindi = await screen.findByText(HINDI_TEXT);
+    expect(hindi).toHaveAttribute('lang', 'hi');
+    expect((languageSelect() as HTMLSelectElement).value).toBe('hi');
+    expect(mockTranslate).toHaveBeenCalledWith('d1', 'hi');
   });
 
-  it('speaks the English advisory when English is the selected guidance', () => {
+  it('translates on demand when a non-cached language is picked', async () => {
+    mockTranslate.mockResolvedValue({ language: 'hi', translatedText: HINDI_TEXT });
+    renderResult();
+    fireEvent.change(languageSelect(), { target: { value: 'hi' } });
+    expect(screen.getByText(/Loading guidance in Hindi/)).toBeInTheDocument();
+    expect(mockTranslate).toHaveBeenCalledWith('d1', 'hi');
+    const hindi = await screen.findByText(HINDI_TEXT);
+    expect(hindi).toHaveAttribute('lang', 'hi');
+    expect(screen.getByText('Hindi guidance')).toBeInTheDocument();
+  });
+
+  it('keeps the last available guidance and explains when a translation fails', async () => {
+    mockTranslate.mockRejectedValue(
+      new Error('AgriN could not load the guidance right now. Please try again in a moment.'),
+    );
+    renderResult();
+    fireEvent.change(languageSelect(), { target: { value: 'hi' } });
+    await screen.findByRole('alert');
+    expect((languageSelect() as HTMLSelectElement).value).toBe('en');
+    expect(screen.getByText('English guidance')).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent("Couldn't load guidance in Hindi.");
+    expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument();
+    mockTranslate.mockResolvedValue({ language: 'hi', translatedText: HINDI_TEXT });
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    const hindi = await screen.findByText(HINDI_TEXT);
+    expect(hindi).toHaveAttribute('lang', 'hi');
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('still offers all nine languages even without a stored Kannada translation', () => {
+    renderResult({ result: makeResult({ translatedAdvisory: '' }) });
+    expect(screen.getAllByRole('option')).toHaveLength(9);
+    expect(screen.getByRole('option', { name: 'ಕನ್ನಡ · Kannada' })).toBeInTheDocument();
+    expect(screen.getByText('English guidance')).toBeInTheDocument();
+  });
+
+  it('speaks the English advisory when an English voice is available', () => {
+    setVoices(['en-IN']);
     renderResult();
     fireEvent.click(screen.getByRole('button', { name: 'Play English audio' }));
-    const speech = globalThis.speechSynthesis as unknown as { latest: { text: string } };
-    expect(speech.latest?.text).toBe(makeResult().advisory);
+    expect(speechStub().latest?.text).toBe(makeResult().advisory);
+    expect(speechStub().latest?.voice?.lang).toBe('en-IN');
+    expect(screen.getByRole('button', { name: 'Stop English audio' })).toBeInTheDocument();
   });
 
-  it('shows a fallback note when no Kannada voice is installed', () => {
+  it('speaks the Kannada text when Kannada is selected and a Kannada voice is available', () => {
+    setVoices(['kn-IN']);
     renderResult();
-    fireEvent.click(screen.getByRole('radio', { name: 'ಕನ್ನಡ' }));
+    fireEvent.change(languageSelect(), { target: { value: 'kn' } });
     fireEvent.click(screen.getByRole('button', { name: 'Play Kannada audio' }));
-    expect(
-      screen.getByText(/closest available voice \(a Kannada voice is not installed/),
-    ).toBeInTheDocument();
-  });
-
-  it('does not break the page when audio errors out', () => {
-    renderResult();
-    fireEvent.click(screen.getByRole('radio', { name: 'ಕನ್ನಡ' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Play Kannada audio' }));
-    const speech = globalThis.speechSynthesis as unknown as {
-      latest: { onerror: (() => void) | null };
-    };
+    expect(speechStub().latest?.text).toBe(KANNADA_TEXT);
     expect(screen.getByRole('button', { name: 'Stop Kannada audio' })).toBeInTheDocument();
-    act(() => speech.latest.onerror?.());
-    const button = screen.getByRole('button', { name: 'Play Kannada audio' });
+  });
+
+  it('refuses to speak (never silently substitutes a wrong-language voice)', () => {
+    renderResult();
+    const button = screen.getByRole('button', { name: 'Play English audio' });
+    expect(button).toBeDisabled();
+    expect(
+      screen.getByText(/voice isn't installed on this device — you can still read the guidance/),
+    ).toBeInTheDocument();
+    fireEvent.click(button);
+    expect(speechStub().speak).not.toHaveBeenCalled();
+  });
+
+  it('recovers when audio errors out', () => {
+    setVoices(['en-IN']);
+    renderResult();
+    fireEvent.click(screen.getByRole('button', { name: 'Play English audio' }));
+    expect(screen.getByRole('button', { name: 'Stop English audio' })).toBeInTheDocument();
+    act(() => speechStub().latest?.onerror?.());
+    const button = screen.getByRole('button', { name: 'Play English audio' });
     expect(button).toBeInTheDocument();
     expect(button).toBeEnabled();
+  });
+});
+
+describe('ScanResult — audio unavailable on device', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('disables audio and says so when speech synthesis is unsupported', () => {
+    vi.stubGlobal('speechSynthesis', undefined);
+    window.localStorage.clear();
+    renderResult();
+    expect(screen.getByText("Audio isn't available on this device.")).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Play English audio' })).toBeDisabled();
   });
 });
 

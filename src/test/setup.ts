@@ -33,6 +33,11 @@ const speechStub = {
     utterance.onstart?.();
   }),
   getVoices: vi.fn(() => []),
+  onVoicesChanged: null as (() => void) | null,
+  addEventListener: vi.fn((_type: string, listener: () => void) => {
+    speechStub.onVoicesChanged = listener;
+  }),
+  removeEventListener: vi.fn(),
 };
 
 globalThis.SpeechSynthesisUtterance = MockUtterance as unknown as typeof SpeechSynthesisUtterance;
@@ -42,6 +47,7 @@ afterEach(() => {
   speechStub.latest = null;
   speechStub.cancel.mockClear();
   speechStub.speak.mockClear();
-  speechStub.getVoices.mockClear();
+  speechStub.getVoices.mockClear().mockImplementation(() => []);
+  speechStub.onVoicesChanged = null;
   document.body.innerHTML = '';
 });

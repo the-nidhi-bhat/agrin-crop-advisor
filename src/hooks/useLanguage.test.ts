@@ -20,15 +20,15 @@ describe('useLanguage', () => {
     expect(window.localStorage.getItem('agrin_language')).toBe('kn');
   });
 
-  it('reads a stored preference on initial mount', () => {
-    window.localStorage.setItem('agrin_language', 'kn');
+  it('reads any stored available language on initial mount', () => {
+    window.localStorage.setItem('agrin_language', 'hi');
     const { result } = renderHook(() => useLanguage());
-    expect(result.current.language.id).toBe('kn');
+    expect(result.current.language.id).toBe('hi');
   });
 
-  it('normalizes unknown or coming-soon stored values back to English', () => {
+  it('normalizes unknown stored values back to English', () => {
     const invalidSpy = vi.spyOn(Storage.prototype, 'getItem');
-    invalidSpy.mockReturnValueOnce('hi');
+    invalidSpy.mockReturnValueOnce('xx');
     const { result } = renderHook(() => useLanguage());
     expect(result.current.language.id).toBe('en');
     invalidSpy.mockRestore();
