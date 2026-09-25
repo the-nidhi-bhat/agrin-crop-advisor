@@ -73,6 +73,7 @@ Deno.serve(async (req) => {
       .select("id")
       .single();
     if (insertError || !inserted) {
+      if (insertError) console.error("AgriN diagnosis insert failed:", insertError);
       throw httpError("internal", "Failed to record the diagnosis attempt.");
     }
     const diagnosisId = inserted.id;
