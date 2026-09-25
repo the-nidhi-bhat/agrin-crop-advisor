@@ -56,15 +56,19 @@ export function HomePage() {
             View crop health
           </Button>
         </div>
-        <p className="mt-5 text-sm text-muted">
-          Supported crops:{' '}
-          {supported.map((crop, i) => (
-            <span key={crop} className="font-semibold text-ink">
-              {crop}
-              {i < supported.length - 1 ? ', ' : ''}
-            </span>
-          ))}
-        </p>
+        <div className="mt-6">
+          <p className="text-sm text-muted">Supported crops</p>
+          <ul className="mt-2 flex flex-wrap gap-2">
+            {supported.map((crop) => (
+              <li
+                key={crop}
+                className="rounded-full border border-line bg-surface px-3 py-1 text-sm font-semibold text-ink shadow-card"
+              >
+                {crop}
+              </li>
+            ))}
+          </ul>
+        </div>
       </section>
 
       {/* Product loop */}

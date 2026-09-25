@@ -273,7 +273,10 @@ export function ScanPage() {
           <div className="sticky bottom-24 z-30 -mx-4 border-t border-line bg-surface/95 px-4 pb-4 pt-3 backdrop-blur lg:static lg:mx-0 lg:border-0 lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-0">
             {preview && (
               <p className="mb-2 truncate text-xs font-semibold text-muted">
-                Ready to scan {crop} · {file?.name}
+                Ready to scan{' '}
+                <span className="rounded-full bg-primary-soft px-2 py-0.5 text-primary">{crop}</span>
+                <span aria-hidden> · </span>
+                {file?.name}
               </p>
             )}
             <Button type="submit" size="lg" className="w-full" disabled={!file}>

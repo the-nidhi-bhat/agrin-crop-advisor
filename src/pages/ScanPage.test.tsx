@@ -135,7 +135,10 @@ describe('ScanPage — happy path', () => {
     await seedHappyFlow();
 
     choosePhoto(container);
-    expect(screen.getByText(/Ready to scan Tomato · leaf.png/)).toBeInTheDocument();
+    const readyBar = container.querySelector('.sticky p');
+    expect(readyBar?.textContent).toContain('Ready to scan');
+    expect(readyBar?.textContent).toContain('Tomato');
+    expect(readyBar?.textContent).toContain('leaf.png');
     clickScan();
 
     expect(
