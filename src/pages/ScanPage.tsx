@@ -3,6 +3,7 @@ import { ImageIcon, RefreshCw, ScanLine, ShieldCheck, SunMedium } from 'lucide-r
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { StagedLoader } from '../components/StagedLoader';
 import { CropSelector } from '../components/scan/CropSelector';
+import { JourneyStepper } from '../components/scan/JourneyStepper';
 import { ScanResult, type ScanResultData } from '../components/scan/ScanResult';
 import { UploadZone } from '../components/scan/UploadZone';
 import { Button } from '../components/ui/Button';
@@ -189,13 +190,16 @@ export function ScanPage() {
 
   if (phase === 'analyzing') {
     return (
-      <StagedLoader
-        crop={crop}
-        preview={preview || ''}
-        currentStep={step}
-        isSlow={isSlow}
-        onTryAgain={handleTryAgain}
-      />
+      <div className="space-y-6">
+        <JourneyStepper current={2} completed={1} compact />
+        <StagedLoader
+          crop={crop}
+          preview={preview || ''}
+          currentStep={step}
+          isSlow={isSlow}
+          onTryAgain={handleTryAgain}
+        />
+      </div>
     );
   }
 
@@ -210,6 +214,8 @@ export function ScanPage() {
         title={t('scan.title')}
         description={t('scan.description')}
       />
+
+      <JourneyStepper current={1} compact />
 
       <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
         <form onSubmit={handleSubmit} className="space-y-6" noValidate>
