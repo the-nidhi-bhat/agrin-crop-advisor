@@ -149,7 +149,7 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
           </h2>
           <p className="mt-4 text-base leading-relaxed text-white/80">
             Scan a leaf, get a clear diagnosis, and know exactly what to do next — in plain words,
-            in Kannada too.
+            in the language you choose.
           </p>
           <ul className="mt-10 space-y-4 text-sm text-white/85">
             {[

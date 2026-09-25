@@ -8,12 +8,15 @@ import {
   Volume2,
   VolumeX,
 } from 'lucide-react';
-import { useState, type ReactNode } from 'react';
-import { GUIDANCE_LANGUAGES, getLanguageById } from '../../lib/languages';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { LANGUAGES, getLanguageById } from '../../lib/languages';
 import { useLanguage } from '../../hooks/useLanguage';
+import { pickVoice, useTTS } from '../../hooks/useTTS';
+import { translateAdvisory, type TranslateResult } from '../../lib/translate';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
+import { controlClass } from '../ui/Field';
 
 export interface ScanResultData {
   id: string;
@@ -85,47 +88,76 @@ function SectionTitle({ n, children }: { n: string; children: ReactNode }) {
 
 export function ScanResult({ result, crop, imageUrl, onReset }: ScanResultProps) {
   const { language, setLanguage } = useLanguage();
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [usingFallbackVoice, setUsingFallbackVoice] = useState(false);
+  const { isSupported, isSpeaking, voices, speak, stop } = useTTS();
+
+  // Guidance is shown in the persisted language. Translations are cached per
+  // language during this visit; English and any stored Kannada are immediate,
+  // everything else is fetched from the translate Edge Function on demand.
+  const [langId, setLangId] = useState<string>(() => language.id);
+  const [translations, setTranslations] = useState<Record<string, string>>(() => ({
+    en: result.advisory,
+    ...(result.translatedAdvisory ? { kn: result.translatedAdvisory } : {}),
+  }));
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [translateError, setTranslateError] = useState<{
+    language: string;
+    message: string;
+  } | null>(null);
+  const requestRef = useRef(0);
 
   const state = healthState(result?.disease);
   const stateMeta = state ? HEALTH_STATE_META[state] : null;
   const symptomPoints = result?.symptoms ? sentencePoints(result.symptoms) : [];
 
-  const knAvailable = Boolean(result?.translatedAdvisory);
   const guidanceAvailable = Boolean(result?.advisory);
-  const [langId, setLangId] = useState<string>(() =>
-    knAvailable && language.id === 'kn' ? 'kn' : 'en',
-  );
   const currentLanguage = getLanguageById(langId);
-  const guidanceText = langId === 'kn' ? result.translatedAdvisory : result.advisory;
-  const ttsLocale = currentLanguage.ttsLocale ?? 'en-IN';
-  const voiceHint = ttsLocale.split('-')[0];
 
-  const playAudio = () => {
-    if (!guidanceText) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(guidanceText);
+  // `shownLangId` is the language whose text we actually have. While a chosen
+  // translation loads, we keep rendering the last available guidance (usually
+  // English) under its OWN lang attribute — never translated-looking text
+  // mislabeled as the target language.
+  const shownLangId = translations[langId] ? langId : 'en';
+  const shownLanguage = getLanguageById(shownLangId);
+  const guidanceText = translations[shownLangId] ?? result.advisory;
+  const voiceAvailable = isSupported && pickVoice(voices, shownLanguage) !== null;
 
-    const voices = window.speechSynthesis.getVoices();
-    const targetVoice = voices.find((v) => v.lang.toLowerCase().startsWith(voiceHint));
-    if (targetVoice) {
-      utterance.voice = targetVoice;
-      setUsingFallbackVoice(false);
-    } else {
-      utterance.lang = ttsLocale;
-      setUsingFallbackVoice(true);
-    }
+  // If the persisted language isn't cached yet, fetch it on mount so the
+  // default view is actually in the language the user asked for.
+  const bootedRef = useRef(false);
+  useEffect(() => {
+    if (bootedRef.current) return;
+    bootedRef.current = true;
+    if (!translations[langId]) void chooseGuidanceLanguage(langId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-    utterance.onstart = () => setIsPlaying(true);
-    utterance.onend = () => setIsPlaying(false);
-    utterance.onerror = () => setIsPlaying(false);
-    window.speechSynthesis.speak(utterance);
-  };
-
-  const chooseGuidanceLanguage = (id: string) => {
+  const chooseGuidanceLanguage = async (id: string) => {
+    const previous = langId;
     setLangId(id);
     setLanguage(id);
+    setTranslateError(null);
+    if (translations[id]) return;
+    const request = ++requestRef.current;
+    setIsTranslating(true);
+    try {
+      const translation: TranslateResult = await translateAdvisory(result.id, id);
+      if (requestRef.current !== request) return;
+      setTranslations((prev) => ({ ...prev, [id]: translation.translatedText }));
+    } catch (err) {
+      if (requestRef.current !== request) return;
+      // Keep showing a language we actually have, and say so plainly.
+      setLangId(translations[previous] ? previous : 'en');
+      setTranslateError({
+        language: id,
+        message: err instanceof Error ? err.message : 'AgriN could not load the guidance.',
+      });
+    } finally {
+      if (requestRef.current === request) setIsTranslating(false);
+    }
+  };
+
+  const retryTranslation = () => {
+    if (translateError) void chooseGuidanceLanguage(translateError.language);
   };
 
   const smsTo =
@@ -230,68 +262,89 @@ export function ScanResult({ result, crop, imageUrl, onReset }: ScanResultProps)
         </div>
       </Card>
 
-      {/* Guidance language — English or Kannada, chosen by the user and persisted */}
+      {/* Guidance language — all nine languages, persisted, translated on demand */}
       {guidanceAvailable && (
         <Card className="border-primary/20 bg-primary-soft/40">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h3 className="font-bold text-ink">Language guidance</h3>
-            <div
-              role="radiogroup"
-              aria-label="Guidance language"
-              className="flex w-fit rounded-control border border-line bg-sunken p-0.5"
-            >
-              {GUIDANCE_LANGUAGES.filter((l) => l.id === 'en' || (l.id === 'kn' && knAvailable)).map(
-                (l) => (
-                  <button
-                    key={l.id}
-                    type="button"
-                    role="radio"
-                    aria-checked={langId === l.id}
-                    onClick={() => chooseGuidanceLanguage(l.id)}
-                    className={`rounded-control px-3 py-1.5 text-sm font-semibold transition-colors ${
-                      langId === l.id
-                        ? 'bg-surface text-ink shadow-sm'
-                        : 'text-muted hover:text-ink'
-                    }`}
-                  >
-                    {l.nativeName}
-                  </button>
-                ),
-              )}
+            <div>
+              <h3 className="font-bold text-ink">Language guidance</h3>
+              <p className="mt-1 text-xs text-muted">
+                The advisory is translated on demand in the language you choose.
+              </p>
             </div>
+            <label className="flex min-w-0 flex-col gap-1 sm:min-w-44">
+              <span className="text-xs font-semibold text-muted">Guidance language</span>
+              <select
+                id="guidance-language"
+                aria-label="Guidance language"
+                value={langId}
+                onChange={(e) => void chooseGuidanceLanguage(e.target.value)}
+                className={`${controlClass} min-h-11`}
+              >
+                {LANGUAGES.map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.nativeName} · {l.name}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
-          {langId === 'kn' && (
+          {guidanceText && (
             <>
-              <p className="mt-0.5 text-xs font-semibold text-muted">Kannada guidance</p>
-              <p lang="kn" className="mt-2 font-kn text-lg leading-relaxed text-ink/80">
-                {result.translatedAdvisory}
+              <p className="mt-3 text-xs font-semibold text-muted">{shownLanguage.name} guidance</p>
+              <p
+                lang={shownLangId}
+                className={`mt-2 text-[15px] leading-relaxed text-ink/80 ${
+                  shownLangId === 'kn' ? 'font-kn' : ''
+                }`}
+              >
+                {guidanceText}
               </p>
             </>
           )}
-          {langId === 'en' && (
-            <>
-              <p className="mt-0.5 text-xs font-semibold text-muted">English guidance</p>
-              <p className="mt-2 text-[15px] leading-relaxed text-ink/80">{result.advisory}</p>
-            </>
+          {isTranslating && (
+            <p className="mt-2 text-xs font-medium text-muted">
+              Loading guidance in {currentLanguage.name}…
+            </p>
+          )}
+          {translateError && (
+            <div
+              role="alert"
+              className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-control border border-danger/30 bg-danger-soft px-3 py-2 text-xs font-medium text-danger"
+            >
+              <span>
+                Couldn't load guidance in {getLanguageById(translateError.language).name}.{' '}
+                {translateError.message}
+              </span>
+              <button
+                type="button"
+                onClick={retryTranslation}
+                className="font-bold underline underline-offset-2"
+              >
+                Try again
+              </button>
+            </div>
           )}
           <Button
             variant="secondary"
             className="mt-4 w-full sm:w-auto"
-            onClick={playAudio}
-            disabled={isPlaying}
-            aria-label={isPlaying ? `Stop ${currentLanguage.name} audio` : `Play ${currentLanguage.name} audio`}
+            onClick={() => (isSpeaking ? stop() : speak(guidanceText, shownLanguage))}
+            disabled={!guidanceText || !voiceAvailable}
+            aria-label={
+              isSpeaking ? `Stop ${shownLanguage.name} audio` : `Play ${shownLanguage.name} audio`
+            }
           >
-            {isPlaying ? <VolumeX size={17} aria-hidden /> : <Volume2 size={17} aria-hidden />}
-            {isPlaying ? 'Playing…' : 'Play audio'}
+            {isSpeaking ? <VolumeX size={17} aria-hidden /> : <Volume2 size={17} aria-hidden />}
+            {isSpeaking ? 'Playing…' : 'Play audio'}
           </Button>
-          {usingFallbackVoice && (
+          {!voiceAvailable && isSupported && (
             <p className="mt-2 text-xs text-muted">
-              Playing in the closest available voice (a {currentLanguage.name} voice is not installed
-              on this device).
+              A {shownLanguage.name} voice isn't installed on this device — you can still read the
+              guidance above.
             </p>
           )}
-          {langId === 'en' && knAvailable && (
-            <p className="mt-2 text-xs font-medium text-primary">ಕನ್ನಡದಲ್ಲಿ · Kannada translation available</p>
+          {!isSupported && (
+            <p className="mt-2 text-xs text-muted">Audio isn't available on this device.</p>
           )}
         </Card>
       )}

@@ -1,0 +1,8 @@
+{
+  "imports": {
+    "@supabase/functions-js": "jsr:@supabase/functions-js@^2",
+    "@supabase/supabase-js": "npm:@supabase/supabase-js@^2.116.0",
+    "@google/generative-ai": "npm:@google/generative-ai@0.24.1",
+    "file-type": "npm:file-type@16.5.4"
+  }
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { GUIDANCE_LANGUAGES, getLanguageById, LANGUAGES } from './languages';
+import { getLanguageById, LANGUAGES } from './languages';
 
 describe('LANGUAGES config', () => {
   it('declares all nine target languages with unique ids and native names', () => {
@@ -21,27 +21,20 @@ describe('LANGUAGES config', () => {
     ]);
   });
 
-  it('marks only English and Kannada as available, rest coming-soon', () => {
-    expect(LANGUAGES.filter((l) => l.status === 'available').map((l) => l.id)).toEqual(['en', 'kn']);
-    expect(LANGUAGES.filter((l) => l.status === 'coming-soon').map((l) => l.id)).toEqual([
-      'hi',
-      'mr',
-      'te',
-      'ta',
-      'ml',
-      'bn',
-      'gu',
+  it('makes every language available with an Indian TTS locale', () => {
+    expect(LANGUAGES.every((l) => l.ttsLocale)).toBe(true);
+    const locales = LANGUAGES.map((l) => l.ttsLocale);
+    expect(locales).toEqual([
+      'en-IN',
+      'kn-IN',
+      'hi-IN',
+      'mr-IN',
+      'te-IN',
+      'ta-IN',
+      'ml-IN',
+      'bn-IN',
+      'gu-IN',
     ]);
-  });
-
-  it('gives English and Kannada a TTS locale and nothing else', () => {
-    const withTts = LANGUAGES.filter((l) => l.ttsLocale).map((l) => l.id);
-    expect(withTts).toEqual(['en', 'kn']);
-    expect(getLanguageById('kn').ttsLocale).toBe('kn-IN');
-  });
-
-  it('lists guidance languages as only the available ones', () => {
-    expect(GUIDANCE_LANGUAGES.map((l) => l.id)).toEqual(['en', 'kn']);
   });
 
   it('falls back to English for unknown ids', () => {

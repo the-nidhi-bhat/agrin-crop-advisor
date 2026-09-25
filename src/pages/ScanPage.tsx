@@ -309,7 +309,7 @@ export function ScanPage() {
             <ul className="mt-3 space-y-2 text-sm leading-relaxed text-muted">
               <li>Your photo is uploaded and analyzed server-side.</li>
               <li>You get a plain-language read on the likely condition.</li>
-              <li>Immediate next steps in English and Kannada.</li>
+              <li>Immediate next steps in the language you choose.</li>
             </ul>
           </Card>
 

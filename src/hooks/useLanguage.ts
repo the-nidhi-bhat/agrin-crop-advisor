@@ -6,13 +6,9 @@ const STORAGE_KEY = "agrin_language"
 function readStored(): Language {
   if (typeof window === "undefined") return getLanguageById("en")
   try {
+    // getLanguageById falls back to English for unknown/stale ids.
     const raw = window.localStorage.getItem(STORAGE_KEY)
-    if (!raw) return getLanguageById("en")
-    const found = getLanguageById(raw)
-    // A stored coming-soon language can only exist from an earlier build or
-    // hand-edited storage; refusing to sit on a guidance language that has no
-    // real translation path is the honest behaviour.
-    return found.status === "available" ? found : getLanguageById("en")
+    return getLanguageById(raw ?? "en")
   } catch {
     return getLanguageById("en")
   }

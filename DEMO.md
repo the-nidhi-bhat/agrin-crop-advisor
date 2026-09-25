@@ -4,7 +4,7 @@ A 60–90 second walkthrough of the verified AgriN happy path, designed to be fo
 alongside the recorded demo video (add the final YouTube link to the README).
 
 > The recorded demo uses the **verified Tomato golden path**: Auth → Crop selection →
-> real tomato-leaf photo → Gemini diagnosis → Advisory → Kannada guidance → Audio →
+> real tomato-leaf photo → Gemini diagnosis → Advisory → guidance translation → Audio →
 > Crop Health history → persistence. Everything shown is real — the app runs with
 > Supabase Auth/Storage/PostgreSQL/Edge Functions and the Google Gemini API.
 
@@ -24,8 +24,9 @@ alongside the recorded demo video (add the final YouTube link to the README).
 8. **Show the diagnosis.** The result appears: the identified disease, a confidence
    label, and "what the photo shows."
 9. **Show the advisory.** Clear *What to do now* guidance generated for that diagnosis.
-10. **Kannada + audio.** Open the **Language guidance** control, switch to **ಕನ್ನಡ**,
-    and press **Play audio** to hear the guidance read aloud.
+10. **Guidance in your language.** Open the **Language guidance** control, switch to the
+    language you choose (e.g. **ಕನ್ನಡ**, हिन्दी, తెలుగు), and press **Play audio** to hear
+    the guidance read aloud when that device voice is installed.
 11. **Open Crop Health.** The scan is saved to this account's private history.
 12. **Show the saved history.** The diagnosis card, confidence, advisory, and note that
     SMS delivery is currently simulated.
@@ -42,8 +43,8 @@ scan once the AI quota resets.
 
 - No fabricated diseases, confidence values, weather, or SMS receipts.
 - No API keys, terminals, or internal Supabase pages on screen.
-- No claims beyond what this repo does (no full multilingual translation, no
-  exhaustive disease database).
+- No claims beyond what this repo does (translations are on-demand and quota-gated,
+  voice playback needs a matching device voice, no exhaustive disease database).
 
 ## Suggested script
 
@@ -51,5 +52,6 @@ scan once the AI quota resets.
 > crop, we upload a real leaf. The photo goes to our Supabase backend, an Edge Function
 > sends it to Google's Gemini model with the crop as context, and Gemini returns a
 > structured diagnosis and advisory. [result] Here it is — disease, confidence, and what
-> to do. [Kannada + audio] We read it out in Kannada with the device voice. [health]
+> to do. [language] We read the guidance out in the language you choose with the
+> device voice when it's available. [health]
 > Every scan is saved privately to this account's history."
