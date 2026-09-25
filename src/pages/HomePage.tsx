@@ -20,6 +20,7 @@ import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { EmptyState } from '../components/ui/EmptyState';
 import { SectionHeader } from '../components/ui/SectionHeader';
+import { JourneyStepper } from '../components/scan/JourneyStepper';
 import { useAuth } from '../hooks/useAuth';
 import { CROPS } from '../lib/crops';
 import { LANGUAGES } from '../lib/languages';
@@ -251,6 +252,19 @@ export function LandingPage() {
               </div>
             </div>
             <HeroRotator />
+          </div>
+        </section>
+
+        {/* Journey identity: Scan → Understand → Act → Monitor */}
+        <section className="border-b border-line bg-surface">
+          <div className="mx-auto max-w-[1200px] px-4 py-10 sm:px-6 lg:px-8">
+            <h2 className="text-center text-xl font-bold text-ink sm:text-2xl">
+              {t('land.journeyTitle')}
+            </h2>
+            <p className="mx-auto mt-2 max-w-xl text-center text-sm text-muted">
+              {t('land.journeyCopy')}
+            </p>
+            <JourneyStepper className="mt-8" />
           </div>
         </section>
 
