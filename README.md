@@ -1,155 +1,301 @@
-# AgriN — A crop health companion
+# AgriN — AI-Powered Crop Health Companion
 
-Take a photo of an affected leaf. AgriN reads it, explains what it likely is, and tells you what to do next — in plain language, in the language you choose.
+AgriN turns a photo of an affected crop leaf into plain-language guidance a farmer can act on — in the language they actually read. Built for small-scale Indian farming, it runs entirely in the web browser with a server-side AI core: you choose a crop, photograph a leaf, and AgriN explains what it likely is and what to do next, then keeps every scan in a private history you can monitor over time.
 
 One calm loop:
 
 **Scan → Understand → Act → Monitor**
 
 - **Scan** — choose a crop and photograph an affected leaf.
-- **Understand** — get a plain-language read on the likely condition, with a confidence level when the AI model provides one.
-- **Act** — receive step-by-step, action-oriented advisory you can act on with local resources.
-- **Monitor** — every scan is saved to your Crop Health history, grouped by crop, so you can track how each crop is going over time.
+- **Understand** — a plain-language read on the likely condition, with a confidence label only when the AI model provides one.
+- **Act** — step-by-step, action-oriented guidance you can follow with locally available resources.
+- **Monitor** — every scan is saved to your private Crop Health history, grouped by crop.
 
-> **AI output is advisory only — it is not a professional agricultural diagnosis.** Always confirm treatments with a local agricultural extension officer.
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38BDF8?logo=tailwindcss&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?logo=supabase&logoColor=white)
+![Google Gemini](https://img.shields.io/badge/Google_Gemini-4285F4?logo=google&logoColor=white)
 
 ---
 
-## Overview
+## Why AgriN
 
-Crop diseases cost time and yield, and help is not always close by. AgriN puts a practical, private crop-health assistant in your pocket. You photograph an affected leaf, and AgriN runs a **scan → understand → act → monitor** loop entirely over the web — no app install, no specialist knowledge required, and guidance delivered in a language the farmer actually reads.
+When a crop starts failing, a small farm's options are slow and uncertain: guess from memory, wait for an expert who may be far away, or treat blindly. The hardest step is the first one — *what is wrong with this plant?*
 
-## What problem it solves
+AgriN shortens precisely that step. It turns a visible, photographable problem (leaf spots, curling, discolouration, wilting) into an honest, actionable read: what the photo shows, what to do next, and what to monitor. Every answer stays attached to that crop's private history, so patterns become visible over the season — and guidance is delivered in the language the farmer reads, not the language a model defaulted to.
 
-Small-scale farmers often face a slow, uncertain path when a crop starts failing: guessing from memory, waiting for an expert, or treating blindly. AgriN shortens the "what is wrong with my crop?" step — turning a photo of a leaf into an honest, actionable read with clear next steps, saved over time so patterns become visible.
+---
 
-## How it works — the AgriN loop
+## How AgriN Works
 
 1. **Choose a crop** — from 10 supported Indian crops.
-2. **Upload a leaf photo** — validated, previewed, and stored in a private bucket.
-3. **AI analyzes it** — the image goes server-side to Google Gemini, which reads the crop context + photo together.
-4. **Get a diagnosis** — the likely condition, what the photo shows, and a confidence level when the model provides one.
-5. **Get an advisory** — step-by-step, action-oriented guidance you can act on with local resources.
-6. **Choose your guidance language** — one of nine supported languages, with device text-to-speech where a matching voice is installed.
-7. **Monitor** — every scan is saved to Crop Health and grouped by crop for tracking over time.
+2. **Photograph an affected leaf** — validated, previewed, and stored privately.
+3. **AI analyzes the image** — server-side, with the crop as context.
+4. **Understand the likely condition** — disease name, what the photo shows, confidence when available.
+5. **Receive practical guidance** — clear, actionable treatment steps.
+6. **Choose a guidance language** — one of nine, with spoken audio when a device voice is installed.
+7. **Monitor the crop** — every scan is saved to Crop Health and grouped by crop.
 
-## Demo
+```mermaid
+flowchart LR
+    A["Choose crop"] --> B["Photograph leaf"]
+    B --> C["AI-assisted assessment"]
+    C --> D["Understand"]
+    D --> E["Action-oriented guidance"]
+    E --> F["Choose language"]
+    F --> G["Crop Health history"]
+```
 
-- **Demo video:** *[Add final YouTube link before submission]*
-- **Live application:** *[Add deployed URL if available]*
+---
 
-The recorded demo follows the **verified Tomato golden path**: sign in → select Tomato → upload a real leaf photo → AI processing → real diagnosis → advisory → guidance in the language you choose + audio → saved scan in Crop Health.
+## Product Highlights
 
-## Screenshots
+### AI-assisted crop assessment
 
-> Screenshots below are real captures from the running app. *(Some captures are added during final repo prep — if any is missing here, it will be filled from the demo recording session.)*
+Photo-based assessment runs through Google Gemini **on the server**. The browser only ever sends the image and receives the result — it never touches the AI key.
 
-![Home](docs/screenshots/home.png)
-![Scan — choose a crop and upload a leaf](docs/screenshots/scan.png)
-![Crop Health](docs/screenshots/health.png)
-![Settings — account and language](docs/screenshots/settings.png)
-![Sign in](docs/screenshots/signin.png)
+### Action-oriented guidance
 
-## Key features
+Every result is structured the way a farmer needs it: **what the photo shows**, **what to do now**, and **what to monitor**. Guidance stays practical and locally actionable.
 
-- **Supabase Auth** — sign in / sign up with email, session persistence, sign out, and password reset. A legitimate JWT session is required before any scan.
-- **Crop selection** — keyboard- and screen-reader-accessible picker across 10 crops.
-- **Leaf photo upload** — image validation (type + size ≤ 5 MB) in the browser *and* again server-side, with a live preview.
-- **AI diagnosis** — the leaf photo is analyzed server-side by Google Gemini; confidence comes only from the model, never synthesized.
-- **AI advisory** — practical, action-oriented guidance in plain language.
-- **Guidance in nine languages** — the advisory is translated on demand into the language you choose (English, ಕನ್ನಡ, हिन्दी, मराठी, తెలుగు, தமிழ், മലയാളം, বাংলা, ગુજરાતી) and readable aloud with device text-to-speech when a matching voice is installed.
-- **Crop Health history** — scans are saved to a private per-user history, grouped by crop.
-- **Private by design** — Row-Level Security, private storage, and owner-scoped file paths.
-- **Honest error handling** — friendly, truthful errors for every failure path (slow AI, busy model, upload problems, quota limits); SMS is clearly labeled simulated rather than faked.
-- **Responsive & accessible** — layouts from small phones to desktop, keyboard navigation, visible focus, and reduced-motion support.
+### Nine-language guidance
 
-## Supported crops
+The advisory is translated on demand into **English, ಕನ್ನಡ, हिन्दी, मराठी, తెలుగు, தமிழ், മലയാളം, বাংলা, and ગુજરાતી** — and the whole app UI is available in all nine too.
 
-Currently supports crop selection for **Tomato, Chili, Paddy, Cotton, Soybean, Wheat, Maize, Groundnut, Sugarcane, and Onion**. The AI always diagnoses from the uploaded photo — listing a crop here means it is *selectable*, not a claim that every possible disease of that crop is covered.
+### Device voice guidance
+
+When a matching voice is installed on the device, guidance can be read aloud with the browser's speech synthesis — and when one isn't, AgriN says so rather than reading in the wrong language.
+
+### Crop Health
+
+Saved scans are grouped by crop so a farmer can track how each crop is doing over time. Only real scan rows are shown — nothing is fabricated.
+
+### Private by design
+
+Supabase Auth, a private Storage bucket, Row-Level Security, and owner-scoped image paths. Every scan belongs to exactly one account.
+
+### Honest AI boundaries
+
+No invented confidence levels, no fabricated weather, no fake SMS receipts, no guaranteed diagnosis. If the AI service is slow or busy, the app says so — and suggests a retry.
+
+First-time visitors can scan immediately: AgriN auto-creates a private session account (no sign-up wall), while standard email sign-in provides continuity across devices.
+
+---
+
+## Architecture at a Glance
+
+```mermaid
+flowchart LR
+    subgraph CLIENT["Client"]
+        B["React + Vite app"]
+        T["Browser speech synthesis<br/>(Web Speech API)"]
+        H["Crop Health view<br/>(direct RLS reads)"]
+    end
+
+    subgraph SUPABASE["Supabase"]
+        A["Auth · email/password + JWT"]
+        S[("Private Storage 'uploads'<br/>{user}/{uuid}.{ext}")]
+        E["Edge Functions · Deno<br/>verify_jwt = true"]
+        D["diagnose"]
+        AD["advisory"]
+        TR["translate"]
+        DE["deliver"]
+        P[("PostgreSQL · Row-Level Security<br/>diagnoses · profiles · rate_limits")]
+    end
+
+    subgraph AI["AI"]
+        G["Google Gemini API<br/>gemini-3.6-flash"]
+    end
+
+    B -->|"authenticate"| A
+    B -->|"upload leaf photo"| S
+    B -->|"invoke with JWT"| E
+
+    E --> D
+    E --> AD
+    E --> TR
+    E --> DE
+
+    D -->|"vision: image + crop context"| G
+    AD -->|"advisory prompt"| G
+    TR -->|"translate advisory"| G
+    DE -->|"Kannada translation"| G
+
+    D -->|"insert / update rows"| P
+    AD -->|"update advisory_text"| P
+    DE -->|"update translation + SMS status"| P
+
+    E -->|"structured JSON result"| B
+    B -->|"read own rows (RLS)"| P
+    B -->|"short-lived signed URLs"| S
+    B -->|"speak guidance"| T
+```
+
+**Gemini requests are made server-side through Supabase Edge Functions. The browser never receives the Gemini API key.** The user's JWT is the only credential the browser holds, and every Edge Function is `verify_jwt = true`.
+
+- **Images** are stored in a **private Storage bucket** at `{user.id}/{uuid}.{ext}` — the owner folder is enforced by Storage policies, and the file is re-verified (magic bytes, size) by the server after upload.
+- **Database access is protected by Row-Level Security.** Browsers may only read their own rows; writes happen inside Edge Functions after ownership checks.
+- **User requests carry authenticated context.** Public anon-key access is paired with a real Supabase JWT session, and `auth.uid()` (never a client-supplied value) is used for all ownership decisions — guarded against IDOR.
+- **AI results return to the browser through the application backend** as validated, structured JSON, not raw model output.
+
+---
+
+## Google Technologies
+
+**Google Gemini API — `gemini-3.6-flash`** is the AI engine at the heart of AgriN, invoked from Supabase Edge Functions:
+
+- **`diagnose`** sends the uploaded crop image (with crop context and location) to Gemini Vision, which returns a strict JSON diagnosis: disease, visible symptoms, treatment advisory, and a confidence label (`High | Medium | Low`) only when the model provides one.
+- **`advisory`** asks Gemini for a focused, plain-language treatment plan the farmer can start with locally available resources.
+- **`translate`** asks Gemini to translate that advisory on demand into the reader's chosen language (English returns the stored advisory directly, with no AI call).
+- **`deliver`** asks Gemini for a fluent Kannada translation used by the SMS-era preview, and records an honest status showing SMS is **simulated**.
+
+Gemini API credentials remain **server-side** — injected through the Edge Function environment, never shipped to the browser.
+
+Gemini is what turns a photo of a leaf into "here is what it likely is, and what to do." That image understanding — grounded in the crop the farmer names — is the entire value of the product, and it is the **only** Google technology used. No Firebase, no Vertex AI, no Google Cloud, no Maps.
+
+---
+
+## Security & Privacy
+
+| Boundary | What AgriN does |
+|---|---|
+| **Authentication** | Supabase Auth with email/password; sessions persist as JWTs; sign-in, sign-up, password reset, and sign-out. |
+| **JWT-protected functions** | All four Edge Functions run with `verify_jwt = true`; the user id always comes from the verified token, never from the request body. |
+| **Row-Level Security** | `diagnoses`, `profiles`, and `rate_limits` are RLS-enforced — users can only reach their own rows. |
+| **Private Storage** | Images live in a private `uploads` bucket; policies allow access only inside the owner's folder. |
+| **Image validation** | **Twice.** The browser checks type and size (≤ 5 MB) before upload; the Edge Function re-downloads and re-verifies magic bytes and size server-side. |
+| **Ownership checks / IDOR protection** | Every resource read (diagnosis, image, advisory) re-verifies ownership against `auth.uid()` before any action. |
+| **Server-side AI credentials** | The Gemini key exists only in the gitignored Edge Function environment. |
+| **Rate limiting** | Transactional per-user, per-endpoint limits (diagnose 5/hr; advisory, translate, deliver 10/hr) enforced in PostgreSQL. |
+| **Input sanitisation** | Crop and location fields are sanitised before reaching prompts; translation targets are allowlisted. |
+| **No committed credentials** | `.env`, `.env.local`, Edge Function `.env`, and logs are gitignored; the repo contains no real secrets. |
+
+---
+
+## AI Safety / Honesty
+
+AgriN is **AI-assisted crop care, not a professional agricultural diagnostic system**. That boundary is treated as a design principle, not a disclaimer:
+
+- Confidence labels are shown **only when the model provides one** — never synthesized.
+- Weather is **never fabricated** — weather context is deliberately absent rather than guessed.
+- SMS delivery is **honestly labelled as simulated** — no fake "sent" receipt.
+- Spoken guidance never silently substitutes a wrong-language voice — if no matching device voice exists, the Play control is disabled with a clear note.
+- AI failures (busy model, quota, timeout) are **surfaced honestly** with a retry path — never masked as a fake result.
+- Before applying anything, AgriN **recommends confirming with a local agricultural extension officer**.
+
+---
+
+## Supported Crops
+
+Crop selection is supported for any of these 10 crops:
+
+| Crop | Tip for a useful scan |
+|---|---|
+| Tomato | Leaf spots, curling, or fruit damage |
+| Chili | Spots or curling on leaves and fruit |
+| Paddy | Leaf blades with spots or discolouration |
+| Cotton | Leaf spots, wilting, or boll damage |
+| Soybean | Leaf spots, yellowing, or wilt |
+| Wheat | Streaks, rust pustules, or leaf discolouration |
+| Maize | Ragged lesions or discoloured streaks on leaves |
+| Groundnut | Circular leaf spots or yellowing |
+| Sugarcane | Striped or reddened lesions on leaves |
+| Onion | Blotches, yellowing leaf tips, or rot |
+
+>Crop selection indicates the crop is supported by the current generic AI pipeline; it is **not** a claim that every disease affecting that crop is covered.
+
+---
 
 ## Languages
 
-| Language | Status |
-|---|---|
-| English | Available (app UI + guidance) |
-| ಕನ್ನಡ (Kannada) | Available (guidance translation + text-to-speech) |
-| हिन्दी (Hindi) | Available |
-| मराठी (Marathi) | Available |
-| తెలుగు (Telugu) | Available |
-| தமிழ் (Tamil) | Available |
-| മലയാളം (Malayalam) | Available |
-| বাংলা (Bengali) | Available |
-| ગુજરાતી (Gujarati) | Available |
+AgriN supports **nine languages** end-to-end:
 
-Guidance is translated on demand by a `translate` Edge Function and cached per scan in the browser. **Spoken audio is only offered when a matching voice is installed on the device** — AgriN never silently reads guidance in the wrong language.
+| Language | Native name | UI | AI advisory translation | Device voice |
+|---|---|---|---|---|
+| English | English | ✓ | ✓ (no AI call needed) | when a voice is installed |
+| Kannada | ಕನ್ನಡ | ✓ | ✓ | when a voice is installed |
+| Hindi | हिन्दी | ✓ | ✓ | when a voice is installed |
+| Marathi | मराठी | ✓ | ✓ | when a voice is installed |
+| Telugu | తెలుగు | ✓ | ✓ | when a voice is installed |
+| Tamil | தமிழ் | ✓ | ✓ | when a voice is installed |
+| Malayalam | മലയാളം | ✓ | ✓ | when a voice is installed |
+| Bengali | বাংলা | ✓ | ✓ | when a voice is installed |
+| Gujarati | ગુજરાતી | ✓ | ✓ | when a voice is installed |
 
-## Google technologies
+There is an important distinction:
 
-**Google Gemini API** (`gemini-3.6-flash`) powers the AI heart of AgriN:
+- **UI language** — the app interface itself is fully translated into each language.
+- **AI advisory translation** — the AI-generated guidance is translated **on demand** per language and cached during the visit.
+- **Device voice** — spoken guidance uses the browser's speech synthesis (Web Speech API) with the best matching installed voice. **Spoken audio is only offered when a matching voice exists on the device** — AgriN never reads guidance silently in a wrong language.
 
-- The `diagnose` Edge Function sends the user's crop context plus the uploaded leaf photo to Gemini, which returns a structured, plain-language diagnosis (condition, symptoms, advisory, and a confidence level).
-- The `advisory` Edge Function asks Gemini for a focused, actionable treatment plan.
-- The `translate` Edge Function asks Gemini to translate the advisory into the language the reader chooses.
-- The `deliver` Edge Function stores a Kannada translation used by the SMS-era preview and an honest simulated SMS status.
+---
 
-Every Gemini call happens **server-side** — the API key never reaches the browser, and free-tier quota limits are surfaced honestly to the user. This is the only Google technology used (no Firebase, Vertex AI, Google Cloud, or Maps). Gemini matters because it is what turns "a photo of a leaf" into "here is what it likely is, and what to do" — the entire value of the product.
+## Demo
 
-## Architecture
+- **Demo video:** coming before submission.
+- **Live application:** deployed URL to be added before submission.
 
-```
-Browser (React)  →  Supabase Auth  →  private Storage upload
-                 →  Edge Functions (diagnose → advisory → translate → deliver)
-                 →  Google Gemini API (server-side key)
-                 →  PostgreSQL diagnosis rows (Row-Level Security)
-                 →  Crop Health history (rendered back in the browser)
-```
+The demo walks the **golden path**, which was verified end-to-end during development: sign in (or auto-provision) → choose Tomato → upload a real tomato-leaf photo → Gemini diagnosis → advisory → guidance in the chosen language, with device audio → saved scan in Crop Health. Everything shown is real — auth, storage, PostgreSQL, Edge Functions, and the Google Gemini API.
 
-- **React/Vite frontend** with `@supabase/supabase-js` for auth, storage, and Edge Function invocation.
-- **Supabase Edge Functions (Deno)** — `diagnose`, `advisory`, `deliver`, `translate`; JWT-verified, ownership-checked, rate-limited.
-- **PostgreSQL + Row-Level Security** — users can only see their own scan history; writes happen in Edge Functions.
-- **Private Storage** — leaf images live in a private `uploads` bucket at `{userId}/{uuid}.{ext}`.
-- **Server-side secrets** — the Gemini API key and service-role credentials exist only in gitignored, server-side locations.
+> Because Gemini operates on a free-tier quota, the demo may occasionally hit a fair-use limit; the app then shows an honest message and the retry path, never a fabricated result.
 
-## Tech stack
+---
+
+## Screenshots
+
+Real captures from the running app.
+
+![Home](docs/screenshots/home.png)
+
+AgriN's home — a public landing page introducing the scan loop.
+
+![Scan — choose a crop and upload a leaf](docs/screenshots/scan.png)
+
+The scan form: crop selector, photo upload with live preview, and optional location/phone fields.
+
+![Crop Health](docs/screenshots/health.png)
+
+Saved scans grouped by crop, with thumbnails and confidence labels.
+
+![Settings — account, language, and appearance](docs/screenshots/settings.png)
+
+Account management, language selection, and light/dark theme.
+
+![Sign in](docs/screenshots/signin.png)
+
+Supabase Auth — sign in, create an account, or reset a password.
+
+---
+
+## Tech Stack
 
 | Layer | Technology |
 |---|---|
-| Frontend | React + TypeScript + Vite |
-| Styling | Tailwind CSS |
-| UI icons | lucide-react |
-| Backend | Supabase (PostgreSQL, Auth, Storage) |
-| Server logic | Supabase Edge Functions (Deno) |
-| AI | Google Gemini (`gemini-3.6-flash`), server-side only |
-| Text-to-speech | Web Speech API (device voices) |
+| Frontend | React 19 + TypeScript + Vite 8 |
+| Styling | Tailwind CSS 4 (dark mode via CSS variables) |
+| Icons | lucide-react |
+| Backend | Supabase (Auth, Storage, PostgreSQL, Edge Functions) |
+| Database | PostgreSQL 17 |
+| Auth | Supabase Auth (email/password, JWT, RLS) |
+| Storage | Supabase Storage (private bucket) |
+| Edge Functions | Supabase Edge Functions · Deno 2 |
+| AI | Google Gemini API (`gemini-3.6-flash`), server-side only |
+| TTS | Web Speech API (device voices) |
+| Routing | react-router-dom |
 | Testing | Vitest + React Testing Library, oxlint |
 
-## Security
+---
 
-- **No secrets in the frontend** — the browser ships only the public Supabase anon key; Gemini and service-role credentials live in server-side code and gitignored files.
-- **Row-Level Security** — the database enforces own-row reads on scan history.
-- **Private storage** — uploads live in a private bucket at owner-scoped paths.
-- **Upload validation** — image files only, ≤ 5 MB, validated in the browser *and* re-checked server-side.
-- **Input validation** — crop and location fields are sanitized; ownership is re-checked on every resource access (IDOR protection).
-- **Rate limiting** — transactional, server-side limits per user and endpoint.
-- **Secret hygiene** — `.env`, `.env.local`, function keys, and logs are gitignored; the repository contains no real credentials.
-
-### Edge Functions
-
-| Function | Purpose | Rate limit |
-|---|---|---|
-| `diagnose` | Image → Gemini vision → condition, symptoms, advisory, confidence → stores a `diagnoses` row | 5/hr |
-| `advisory` | Loads the user's diagnosis → Gemini text advisory (weather stays `null`) | 10/hr |
-| `deliver` | Stores a Kannada translation for the SMS-era preview + honest simulated SMS status | 10/hr |
-| `translate` | On-demand advisory translation into any of the nine languages (English skips the AI call) | 10/hr |
-
-## Local setup (development)
+## Local Development
 
 ### Prerequisites
 
-- **Node.js** 18+ (built against Node 24)
-- **Docker Desktop** (required by the local Supabase stack)
-- **Supabase CLI** (via `npm i -g supabase`, or the pinned version with `npx supabase`)
-- A **Google Gemini API key** to run real AI calls
+- **Node.js 18+** (built against Node 24)
+- **Docker Desktop** (for the local Supabase stack)
+- **Supabase CLI** (`npm i -g supabase`, or pinned via `npx supabase`)
+- A **Google Gemini API key** for real AI calls (optional — everything else works without it)
 
 ### 1. Install dependencies
 
@@ -165,9 +311,9 @@ npx supabase start
 
 This boots Postgres, Auth, Storage, the Edge Functions runtime, and Studio, and applies the migrations in `supabase/migrations/`.
 
-### 3. Add the Gemini API key
+### 3. Add the Gemini API key (server-side)
 
-The Edge Functions read the key from `supabase/functions/.env` (gitignored); `supabase start` loads it automatically:
+Edge Functions read it from `supabase/functions/.env` (gitignored); `supabase start` loads it automatically:
 
 ```
 GEMINI_API_KEY="your-real-gemini-api-key"
@@ -175,14 +321,14 @@ GEMINI_API_KEY="your-real-gemini-api-key"
 
 ### 4. Configure the frontend
 
-Copy `.env.example` to `.env.local` (gitignored) and fill in the values. For the local stack:
+Copy `.env.example` to `.env.local` (gitignored) and fill in the values from your local stack:
 
 ```
 VITE_SUPABASE_URL=http://127.0.0.1:54321
 VITE_SUPABASE_ANON_KEY=<your anon key — from `npx supabase status -o env`>
 ```
 
-The anon key is public by design. Never put service-role or Gemini keys in frontend env files.
+The anon key is public by design. **Never put service-role or Gemini credentials in frontend environment variables.**
 
 ### 5. Run the app
 
@@ -196,66 +342,74 @@ Open `http://localhost:5173`.
 
 ```bash
 npx supabase status            # URLs + keys for the running local stack
-npx supabase functions serve   # run the Edge Functions development server
 npm run test                   # unit + component tests (Vitest)
 npm run lint                   # oxlint
 npm run build                  # type-check (tsc -b) + production build
 ```
 
-## Environment variables
+---
 
-Only two environment variables are required by the app:
+## Environment Variables
 
-| Variable | Where | Purpose |
+| Variable | Belongs in | Purpose |
 |---|---|---|
-| `VITE_SUPABASE_URL` | `src/lib/supabase.ts` | URL of the Supabase instance (local or hosted) |
-| `VITE_SUPABASE_ANON_KEY` | `src/lib/supabase.ts` | Public anon key for the Supabase client |
-| `GEMINI_API_KEY` | Edge Functions (`_shared/agrin.ts`) | Server-side only; read by `supabase start` from `supabase/functions/.env` |
+| `VITE_SUPABASE_URL` | `.env.local` (browser) | Supabase instance URL, e.g. `http://127.0.0.1:54321` locally |
+| `VITE_SUPABASE_ANON_KEY` | `.env.local` (browser) | Public anon key for the Supabase client |
+| `GEMINI_API_KEY` | `supabase/functions/.env` (server only) | Gemini key used by Edge Functions; **never** a Vite/browser variable |
 
-See `.env.example` and the setup steps above. Real values are never committed.
+Real values are never committed — `.env.local` and `supabase/functions/.env` are gitignored.
 
-## Testing
+---
 
-Verified results from the current repository:
+## Testing & Verification
 
-- **`npm run test`** — 97 passing unit + component tests (Vitest + React Testing Library), covering auth, scan flow, language configuration/selector, on-demand translation, and result rendering + TTS.
-- **`npm run lint`** — clean (oxlint; zero errors).
-- **`npm run build`** — type-check (`tsc -b`) + production build succeeds.
-- **Browser verification** — sign in / sign up / sign out / password reset, the scan flow with honest progress stages, language selection + persistence, and responsive layouts at desktop (1280×800), tablet (768), and mobile (390×844) with no console errors or horizontal overflow.
-- **Real AI end-to-end** — the golden path (Tomato → real leaf photo → real Gemini diagnosis → advisory → guidance translation → Crop Health history) was verified live during development. Gemini free-tier quota limits how often real scans can run; when the quota is spent, the app says so honestly instead of faking a result.
+Verified against the current repository:
 
-## Project structure
+- **`npm run test`** — **101 tests passing across 12 files** (Vitest + React Testing Library): auth, scan flow, crop selection, language configuration and translation, result rendering, and TTS behaviour.
+- **`npm run lint`** — no errors (oxlint; existing informational warnings only).
+- **`npm run build`** — type-check (`tsc -b`) and production build succeed.
+- **Browser verification** — automated sweeps across **4 viewports (desktop 1440/1280, tablet 768, mobile 390)** in **light and dark themes**: sign in / sign up / sign out / password reset, the full scan flow with honest progress stages, language selection + persistence, light/dark theme persistence, and no horizontal overflow on any page. Hindi-language UI was spot-checked.
+- **End-to-end (real AI)** — the golden path (Tomato → real leaf photo → Gemini diagnosis → advisory → language guidance → Crop Health) was verified live during development. Gemini's free-tier quota limits how often real scans can run; when spent, the app says so honestly.
+
+---
+
+## Project Structure
 
 ```
-src/                              # React frontend
-  lib/                            # supabase client, crops, languages, auth helpers
-  hooks/                          # useAuth, useLanguage, useTTS, useCropHealth
+src/
+  lib/                 # supabase client, crops, languages, strings, translation
+  hooks/               # useAuth, useLanguage, useTTS, useCropHealth, useTheme
   components/
-    ui/                           # shared primitives (Button, Card, Field, Badge…)
-    layout/                       # AppLayout, Brand
-    auth/                         # SignedOutGate
-    scan/                         # CropSelector, UploadZone, ScanResult
-    settings/                     # LanguageSelector
-  pages/                          # Home, Scan, Health, Settings, Auth
+    ui/                # shared primitives (Button, Card, Field, Badge…)
+    layout/            # AppLayout, Brand
+    auth/              # SignedOutGate
+    scan/              # CropSelector, UploadZone, ScanResult
+    settings/          # LanguageSelector
+  pages/               # Landing, Scan, Health, Settings, Auth
 supabase/
-  config.toml                     # local stack configuration
-  migrations/                     # SQL schema, RLS, rate-limit RPC
-  functions/                      # Edge Functions (diagnose / advisory / deliver / translate)
-    _shared/agrin.ts              # shared auth, rate-limit, Gemini, response helpers
-docs/                             # architecture & demo guides, screenshots
+  config.toml          # local stack configuration
+  migrations/          # SQL schema, RLS, rate-limit RPC
+  functions/           # edge functions: diagnose / advisory / deliver / translate
+    _shared/agrin.ts   # auth, rate-limit, Gemini, and response helpers
+    .env               # server-side Gemini key (gitignored)
+docs/
+  migration-design.md  # Firebase → Supabase migration history
+  screenshots/         # app screenshots
 ```
+
+---
 
 ## Limitations
 
-- **Not a substitute for professional diagnosis.** Results are advisory; always confirm with a local agricultural extension officer.
+- **Not a substitute for professional diagnosis.** Results are advisory; always confirm treatment with a local agricultural extension officer.
 - **AI output can be imperfect.** Gemini reads the photo and can be wrong or uncertain; confidence is shown only when the model provides it.
-- **Voice availability depends on the device.** All nine guidance languages are supported; spoken audio requires a matching text-to-speech voice to be installed, otherwise the Play button is disabled with an honest note.
-- **No weather or climate advisories** — weather context is deliberately left unimplemented rather than fabricated.
-- **Crop support is selectable + generic pipeline processing**, not an exhaustive per-crop disease database.
-- **Gemini free-tier quota** affects how often real scans can be run; the app surfaces this honestly.
-- **SMS delivery is simulated** (no provider connected) and clearly labeled as such.
+- **Voice depends on the device.** All nine languages are supported for guidance; spoken audio requires a matching installed voice, otherwise the Play control is disabled with an honest note.
+- **No weather or climate advisories** — deliberately left unimplemented rather than fabricated.
+- **Crop support is selectable, generic-pipeline processing** — not an exhaustive per-crop disease database.
+- **Gemini free-tier quota** affects how often real scans can run; the app surfaces this honestly with a retry path.
+- **SMS delivery is simulated** (no provider connected) and clearly labelled as such.
 
-<!-- Team: add actual member names and roles before submission (never invent). -->
+---
 
 ## License
 
