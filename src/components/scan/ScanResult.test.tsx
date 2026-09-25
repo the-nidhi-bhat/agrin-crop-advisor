@@ -329,6 +329,23 @@ describe('ScanResult — guidance language and audio', () => {
     expect(button).toBeInTheDocument();
     expect(button).toBeEnabled();
   });
+
+  it('reads the English advisory when the device has no voice for the shown language', () => {
+    setVoices(['en-US']);
+    renderResult();
+    fireEvent.change(languageSelect(), { target: { value: 'kn' } });
+    // The Kannada text is on screen, but the only installed voice is English.
+    expect(screen.getAllByText(KANNADA_TEXT)[0]).toBeInTheDocument();
+    const button = screen.getByRole('button', { name: 'Play English audio' });
+    expect(button).toBeEnabled();
+    fireEvent.click(button);
+    // It speaks English text in English — never Kannada text in an English voice.
+    expect(speechStub().latest?.text).toBe(makeResult().advisory);
+    expect(speechStub().latest?.voice?.lang).toBe('en-US');
+    expect(
+      screen.getByText(/Kannada voice isn't installed on this device/),
+    ).toBeInTheDocument();
+  });
 });
 
 describe('ScanResult — audio unavailable on device', () => {

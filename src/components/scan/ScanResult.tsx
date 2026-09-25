@@ -125,6 +125,14 @@ export function ScanResult({ result, crop, imageUrl, onReset }: ScanResultProps)
   const shownLanguage = getLanguageById(shownLangId);
   const guidanceText = translations[shownLangId] ?? result.advisory;
   const voiceAvailable = isSupported && pickVoice(voices, shownLanguage) !== null;
+  // A device usually has no voice for the language on screen. Reading Kannada
+  // text with an English voice is unintelligible, so fall back to the English
+  // advisory in an installed voice and label the button with the language that
+  // is actually spoken. With no voices at all this stays disabled and says so.
+  const spokenLanguage = voiceAvailable ? shownLanguage : getLanguageById('en');
+  const spokenText = voiceAvailable ? guidanceText : (translations.en ?? '');
+  const canPlay =
+    isSupported && Boolean(spokenText) && pickVoice(voices, spokenLanguage) !== null;
 
   // If the persisted language isn't cached yet, fetch it on mount so the
   // default view is actually in the language the user asked for.
@@ -241,12 +249,12 @@ export function ScanResult({ result, crop, imageUrl, onReset }: ScanResultProps)
         <Button
           variant="secondary"
           className="mt-2 w-full sm:w-auto"
-          onClick={() => (isSpeaking ? stop() : speak(guidanceText, shownLanguage))}
-          disabled={!guidanceText || !voiceAvailable}
+          onClick={() => (isSpeaking ? stop() : speak(spokenText, spokenLanguage))}
+          disabled={!canPlay}
           aria-label={
             isSpeaking
-              ? t('result.stopAria', { language: shownLanguage.name })
-              : t('result.playAria', { language: shownLanguage.name })
+              ? t('result.stopAria', { language: spokenLanguage.name })
+              : t('result.playAria', { language: spokenLanguage.name })
           }
         >
           {isSpeaking ? <VolumeX size={17} aria-hidden /> : <Volume2 size={17} aria-hidden />}
