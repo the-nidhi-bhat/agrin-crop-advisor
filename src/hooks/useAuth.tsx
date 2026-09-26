@@ -34,34 +34,15 @@ const AuthContext = createContext<AuthContextType>({
   signedOut: false,
 });
 
-// Fallback account for local stacks where anonymous sign-ins are disabled.
-// Persisted so a fresh page load resolves to the same session.
-const AUTO_CREDS_KEY = "agrin_auto_creds";
-const EMAIL_DOMAIN = "@agrin.local";
-
-// Set after an explicit sign-out. Auto-provisioning is skipped while it is set
-// so the sign-in / sign-up screens are actually shown.
+// Set after an explicit sign-out, which also deletes the Supabase session from
+// localStorage. Kept in localStorage — not sessionStorage — because both live
+// for the same origin-wide lifetime: a per-tab flag let any other tab silently
+// mint a brand-new anonymous identity instead of honouring the sign-out.
 const SIGNED_OUT_KEY = "agrin_signed_out";
-
-function loadAutoCreds(): { email: string; password: string } | null {
-  try {
-    const raw = localStorage.getItem(AUTO_CREDS_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (parsed?.email && parsed?.password) return parsed;
-  } catch {
-    // ignore corrupt stored creds
-  }
-  return null;
-}
-
-function saveAutoCreds(email: string, password: string) {
-  localStorage.setItem(AUTO_CREDS_KEY, JSON.stringify({ email, password }));
-}
 
 function isSignedOutFlag() {
   try {
-    return sessionStorage.getItem(SIGNED_OUT_KEY) === "1";
+    return localStorage.getItem(SIGNED_OUT_KEY) === "1";
   } catch {
     return false;
   }
@@ -69,7 +50,7 @@ function isSignedOutFlag() {
 
 function clearSignedOutFlag() {
   try {
-    sessionStorage.removeItem(SIGNED_OUT_KEY);
+    localStorage.removeItem(SIGNED_OUT_KEY);
   } catch {
     // ignore
   }
@@ -80,28 +61,17 @@ type SignInStatus = "signed-in" | "signed-out" | "unavailable";
 // Returns the auth state after bootstrapping a session. Throws only on
 // network-level failure so the provider can show an honest recoverable state.
 async function ensureSignedIn(): Promise<SignInStatus> {
-  if (isSignedOutFlag()) return "signed-out";
-
   const existing = await supabase.auth.getSession();
   if (existing.data.session) return "signed-in";
 
-  // Preferred path: anonymous, like the Firebase UX.
+  // A real session always wins; the flag only guards re-provisioning.
+  if (isSignedOutFlag()) return "signed-out";
+
+  // Anonymous, like the Firebase UX. Supabase persists it in localStorage, so
+  // a normal reload reuses the same uid.
   const anon = await supabase.auth.signInAnonymously();
   if (!anon.error) return "signed-in";
 
-  // Fallback: auto-provisioned email/password account (no login screen).
-  let creds = loadAutoCreds();
-  if (creds) {
-    const signIn = await supabase.auth.signInWithPassword(creds);
-    if (!signIn.error) return "signed-in";
-  }
-  const email = `agrin_${crypto.randomUUID()}${EMAIL_DOMAIN}`;
-  const password = crypto.randomUUID();
-  const signUp = await supabase.auth.signUp({ email, password });
-  if (!signUp.error) {
-    saveAutoCreds(email, password);
-    return "signed-in";
-  }
   return "unavailable";
 }
 
@@ -178,7 +148,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = useCallback(async () => {
     try {
-      sessionStorage.setItem(SIGNED_OUT_KEY, "1");
+      localStorage.setItem(SIGNED_OUT_KEY, "1");
     } catch {
       // ignore
     }
